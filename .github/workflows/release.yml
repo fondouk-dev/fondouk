@@ -1,0 +1,68 @@
+name: Release
+
+# Publie une Release GitHub avec le zip du module.
+#   - push d'un tag `vX.Y.Z`  -> build + release automatique
+#   - déclenchement manuel (workflow_dispatch) -> saisir le tag
+# Le zip est produit par le builder canonique build/package.sh (mêmes étapes
+# que le build local : vendoring réel du cœur, conformité validateur, lint).
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag à publier (ex. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & publish module zip
+    runs-on: ubuntu-latest
+    # Ne jamais publier depuis le miroir privé : releases uniquement sur le repo public.
+    if: github.repository == 'fondouk-dev/fondouk'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: meta
+        run: echo "tag=${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
+      - name: Build module zip (build/package.sh)
+        run: NO_VERIFY=1 MODULE_NAME=fondouk ./build/package.sh
+
+      - name: Create / update GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.meta.outputs.tag }}
+        run: |
+          set -euo pipefail
+          NOTES="$(cat <<EOF
+          Module Fondouk — **AI Agent Ready pour PrestaShop** (UCP + MCP).
+
+          ## Installation
+          Back-office PrestaShop → **Modules → Envoyer un module** → déposer \`fondouk.zip\`.
+          Aucun réglage : le manifest est aussitôt en ligne à \`https://votre-boutique/.well-known/ucp\`.
+
+          ## Inclus
+          - Manifest de découverte **UCP** (\`/.well-known/ucp\`) + capability **Catalog** (search / lookup / product) en **REST** et **MCP**.
+          - Généré par **introspection** de la boutique ; **lecture seule, public uniquement**.
+          - Prix en contexte visiteur anonyme ; rate limiting + cache intégrés.
+
+          ## Compatibilité
+          PrestaShop **8.2** et **9.1** · URL simplifiées + HTTPS requis · UCP \`2026-04-08\`.
+
+          Démo : https://demo.fondouk.dev — Licence MIT, un projet Synapsea.
+          EOF
+          )"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" build/dist/fondouk.zip --clobber
+          else
+            gh release create "$TAG" \
+              --title "Fondouk $TAG — AI Agent Ready for PrestaShop" \
+              --notes "$NOTES" \
+              build/dist/fondouk.zip
+          fi

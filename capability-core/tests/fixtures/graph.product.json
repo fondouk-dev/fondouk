@@ -1,0 +1,58 @@
+{
+  "graph_version": "0",
+  "generated_at": "2026-07-04T12:00:00+00:00",
+  "subset": { "kind": "product" },
+  "shop": {
+    "id": "1",
+    "gid_base": "boutique.example",
+    "base_url": "https://boutique.example",
+    "default_language": "fr",
+    "default_currency": "EUR",
+    "languages": ["fr", "en"],
+    "currencies": ["EUR", "USD"],
+    "default_country": "FR",
+    "prices_include_tax": true
+  },
+  "products": [
+    {
+      "id": "gid://boutique.example/1/product/21",
+      "handle": "agt-0021-t-shirt-demo-21",
+      "reference": "AGT-0021",
+      "title": { "fr": "T-shirt démo 21", "en": "Demo t-shirt 21" },
+      "description": { "fr": "T-shirt à déclinaisons taille et couleur.", "en": "T-shirt with size and color variants." },
+      "url": {
+        "fr": "https://boutique.example/fr/10-agt-0021-t-shirt-demo-21.html",
+        "en": "https://boutique.example/en/10-agt-0021-t-shirt-demo-21.html"
+      },
+      "public": true,
+      "category_ids": ["10"],
+      "option_axes": [
+        {
+          "name": { "fr": "Taille", "en": "Taille" },
+          "values": [{ "fr": "S", "en": "S" }, { "fr": "M", "en": "M" }, { "fr": "L", "en": "L" }]
+        },
+        {
+          "name": { "fr": "Couleur", "en": "Couleur" },
+          "values": [{ "fr": "Rouge", "en": "Red" }, { "fr": "Bleu", "en": "Blue" }, { "fr": "Vert", "en": "Green" }]
+        }
+      ],
+      "rating": { "value": 4.5, "scale_max": 5, "count": 12 },
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/21-101",
+          "sku": "AGT-0021-S-R",
+          "title": { "fr": "S / Rouge", "en": "S / Red" },
+          "barcodes": [{ "type": "EAN", "value": "3401579000210" }],
+          "option_values": [
+            { "axis": { "fr": "Taille", "en": "Taille" }, "value": { "fr": "S", "en": "S" } },
+            { "axis": { "fr": "Couleur", "en": "Couleur" }, "value": { "fr": "Rouge", "en": "Red" } }
+          ],
+          "prices": [
+            { "price": { "amount_minor": 5388, "currency": "EUR" }, "tax_included": true, "country": "FR" }
+          ],
+          "availability": { "available": true, "status": "in_stock", "quantity": 20 }
+        }
+      ]
+    }
+  ]
+}

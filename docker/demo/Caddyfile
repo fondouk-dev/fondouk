@@ -1,0 +1,14 @@
+# Reverse proxy TLS pour la démo Fondouk. Remplacer le domaine si besoin (variable DEMO_DOMAIN
+# dans le compose — Caddy ne lit pas les env, éditer ici en cohérence).
+demo.fondouk.dev {
+	encode zstd gzip
+
+	reverse_proxy ps9:80 {
+		# PrestaShop derrière un proxy TLS : lui dire que la requête d'origine est en HTTPS.
+		header_up X-Forwarded-Proto https
+		header_up X-Forwarded-Port 443
+	}
+
+	# Le manifest et llms.txt sont des ressources publiques cacheables ; Caddy respecte
+	# les en-têtes Cache-Control émis par le module.
+}

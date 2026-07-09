@@ -1,0 +1,53 @@
+{
+  "graph_version": "0",
+  "generated_at": "2026-07-04T12:00:00+00:00",
+  "subset": { "kind": "lookup" },
+  "shop": {
+    "id": "1",
+    "gid_base": "boutique.example",
+    "base_url": "https://boutique.example",
+    "default_language": "fr",
+    "default_currency": "EUR",
+    "languages": ["fr", "en"],
+    "currencies": ["EUR", "USD"]
+  },
+  "products": [
+    {
+      "id": "gid://boutique.example/1/product/29",
+      "reference": "AGT-0029",
+      "title": { "fr": "Promo publique", "en": "Public promo" },
+      "public": true,
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/29-0",
+          "sku": "AGT-0029",
+          "prices": [
+            {
+              "price": { "amount_minor": 8160, "currency": "EUR" },
+              "list_price": { "amount_minor": 9600, "currency": "EUR" },
+              "tax_included": true,
+              "country": "FR"
+            }
+          ],
+          "availability": { "available": true, "status": "in_stock", "quantity": 30 }
+        }
+      ]
+    },
+    {
+      "id": "gid://boutique.example/1/product/30",
+      "reference": "AGT-0030",
+      "title": { "fr": "Tarif B2B", "en": "B2B pricing" },
+      "public": true,
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/30-0",
+          "sku": "AGT-0030",
+          "prices": [
+            { "price": { "amount_minor": 14400, "currency": "EUR" }, "tax_included": true, "country": "FR" }
+          ],
+          "availability": { "available": true, "status": "in_stock", "quantity": 40 }
+        }
+      ]
+    }
+  ]
+}

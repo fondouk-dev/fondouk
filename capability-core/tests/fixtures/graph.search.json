@@ -1,0 +1,96 @@
+{
+  "graph_version": "0",
+  "generated_at": "2026-07-04T12:00:00+00:00",
+  "subset": { "kind": "search", "cursor": "eyJwIjoxfQ==", "has_next": true, "total_count": 30 },
+  "shop": {
+    "id": "1",
+    "gid_base": "boutique.example",
+    "name": "Boutique Démo",
+    "base_url": "https://boutique.example",
+    "default_language": "fr",
+    "default_currency": "EUR",
+    "languages": ["fr", "en"],
+    "currencies": ["EUR", "USD"],
+    "default_country": "FR",
+    "prices_include_tax": true
+  },
+  "capabilities": ["catalog.search", "catalog.lookup"],
+  "categories": [
+    { "id": "10", "name": "AGT Démo", "path": "Accueil > AGT Démo", "parent_id": "2" }
+  ],
+  "products": [
+    {
+      "id": "gid://boutique.example/1/product/1",
+      "handle": "agt-0001-produit-demo-1",
+      "reference": "AGT-0001",
+      "title": { "fr": "Produit démo 1", "en": "Demo product 1" },
+      "description": { "fr": "Description longue du produit démo 1.", "en": "Long description of demo product 1." },
+      "url": {
+        "fr": "https://boutique.example/fr/10-agt-0001-produit-demo-1.html",
+        "en": "https://boutique.example/en/10-agt-0001-produit-demo-1.html"
+      },
+      "public": true,
+      "category_ids": ["10"],
+      "media": [
+        { "type": "image", "url": "https://boutique.example/img/p/1/1.jpg", "alt_text": "Produit démo 1" }
+      ],
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/1-0",
+          "sku": "AGT-0001",
+          "prices": [
+            { "price": { "amount_minor": 1308, "currency": "EUR" }, "tax_included": true, "country": "FR" },
+            { "price": { "amount_minor": 1413, "currency": "USD" }, "tax_included": true, "country": "FR" }
+          ],
+          "availability": { "available": true, "status": "in_stock", "quantity": 50 }
+        }
+      ]
+    },
+    {
+      "id": "gid://boutique.example/1/product/21",
+      "handle": "agt-0021-t-shirt-demo-21",
+      "reference": "AGT-0021",
+      "title": { "fr": "T-shirt démo 21", "en": "Demo t-shirt 21" },
+      "public": true,
+      "category_ids": ["10"],
+      "option_axes": [
+        {
+          "name": { "fr": "Taille", "en": "Taille" },
+          "values": [{ "fr": "S", "en": "S" }, { "fr": "M", "en": "M" }, { "fr": "L", "en": "L" }]
+        },
+        {
+          "name": { "fr": "Couleur", "en": "Couleur" },
+          "values": [{ "fr": "Rouge", "en": "Red" }, { "fr": "Bleu", "en": "Blue" }, { "fr": "Vert", "en": "Green" }]
+        }
+      ],
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/21-101",
+          "sku": "AGT-0021-S-R",
+          "title": { "fr": "S / Rouge", "en": "S / Red" },
+          "option_values": [
+            { "axis": { "fr": "Taille", "en": "Taille" }, "value": { "fr": "S", "en": "S" } },
+            { "axis": { "fr": "Couleur", "en": "Couleur" }, "value": { "fr": "Rouge", "en": "Red" } }
+          ],
+          "prices": [
+            { "price": { "amount_minor": 5388, "currency": "EUR" }, "tax_included": true, "country": "FR" }
+          ],
+          "availability": { "available": true, "status": "in_stock", "quantity": 20 }
+        },
+        {
+          "id": "gid://boutique.example/1/variant/21-109",
+          "sku": "AGT-0021-L-V",
+          "title": { "fr": "L / Vert", "en": "L / Green" },
+          "option_values": [
+            { "axis": { "fr": "Taille", "en": "Taille" }, "value": { "fr": "L", "en": "L" } },
+            { "axis": { "fr": "Couleur", "en": "Couleur" }, "value": { "fr": "Vert", "en": "Green" } }
+          ],
+          "prices": [
+            { "price": { "amount_minor": 5388, "currency": "EUR" }, "tax_included": true, "country": "FR" }
+          ],
+          "availability": { "available": false, "status": "out_of_stock", "quantity": 0 }
+        }
+      ]
+    }
+  ]
+}

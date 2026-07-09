@@ -1,0 +1,30 @@
+{
+    "name": "fondouk/capability-core",
+    "description": "Cœur d'introspection agentique, neutre — ZÉRO dépendance PrestaShop. Produit le Capability Graph pivot (Blueprint artefact n°1) consommé par les adapters UCP/MCP/WebMCP.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": ["agentic-commerce", "ucp", "mcp", "capability-graph"],
+    "require": {
+        "php": ">=8.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "opis/json-schema": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Fondouk\\CapabilityCore\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Fondouk\\CapabilityCore\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

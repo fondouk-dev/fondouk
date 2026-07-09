@@ -1,0 +1,32 @@
+{
+  "graph_version": "0",
+  "generated_at": "2026-07-04T12:00:00+00:00",
+  "subset": { "kind": "product" },
+  "shop": {
+    "id": "1",
+    "gid_base": "boutique.example",
+    "base_url": "https://boutique.example",
+    "default_language": "fr",
+    "default_currency": "EUR",
+    "languages": ["fr", "en"],
+    "currencies": ["EUR"]
+  },
+  "products": [
+    {
+      "id": "gid://boutique.example/1/product/500",
+      "reference": "AGT-CATALOG-MODE",
+      "title": { "fr": "Produit en mode catalogue", "en": "Catalog-mode product" },
+      "description": { "fr": "Prix masqué au visiteur : visible sans prix.", "en": "Price hidden from visitor: visible without price." },
+      "public": true,
+      "category_ids": ["10"],
+      "variants": [
+        {
+          "id": "gid://boutique.example/1/variant/500-0",
+          "sku": "AGT-CATALOG-MODE",
+          "prices": [],
+          "availability": { "available": true, "status": "in_stock", "quantity": 8 }
+        }
+      ]
+    }
+  ]
+}

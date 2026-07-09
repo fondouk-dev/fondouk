@@ -1,0 +1,123 @@
+# Fondouk — environnement de développement double-boutique (Semaine 1, Étape 1)
+#
+# Deux stacks PrestaShop indépendantes, alignées sur la spec (§0 TECHNICAL-SPEC) :
+#   - ps8 : PrestaShop 8.2.x sur PHP 8.1  (port 8081)
+#   - ps9 : PrestaShop 9.1.x sur PHP 8.2  (port 8091)
+# Chacune a sa propre base MariaDB. Le module et le seed sont montés en bind-mount.
+#
+# Démarrage :  docker compose up -d       (première fois : ~2-4 min d'auto-install par boutique)
+# Boutiques :  http://localhost:8081  (PS8)   http://localhost:8091  (PS9)
+# BO :         http://localhost:8081/admin-dev   (identifiants dans .env)
+# Seed :       docker compose exec ps8 php -d memory_limit=-1 /seed/seed.php
+#              docker compose exec ps9 php -d memory_limit=-1 /seed/seed.php
+
+services:
+  # ---------- PrestaShop 8.2 / PHP 8.1 ----------
+  db8:
+    image: mariadb:11.4
+    container_name: fondouk-db8
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpwd}
+      MARIADB_DATABASE: ${DB_NAME:-prestashop}
+      MARIADB_USER: ${DB_USER:-prestashop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-prestashop}
+    volumes:
+      - db8_data:/var/lib/mysql
+    ports:
+      - "33061:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ps8:
+    image: prestashop/prestashop:8.2-8.1
+    container_name: fondouk-ps8
+    depends_on:
+      db8:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db8
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-prestashop}
+      DB_USER: ${DB_USER:-prestashop}
+      DB_PASSWD: ${DB_PASSWORD:-prestashop}
+      DB_PREFIX: ps_
+      PS_INSTALL_AUTO: 1
+      PS_ERASE_DB: 0
+      PS_DEV_MODE: 1
+      PS_DOMAIN: localhost:8081
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@fondouk.test}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-Fondouk2026}
+      PS_LANGUAGE: fr
+      PS_COUNTRY: fr
+      PS_ENABLE_SSL: 0
+    volumes:
+      - ps8_data:/var/www/html
+      - ./prestashop-module:/var/www/html/modules/fondouk
+      - ./docker/seed:/seed:ro
+    ports:
+      - "8081:80"
+    restart: unless-stopped
+
+  # ---------- PrestaShop 9.1 / PHP 8.2 ----------
+  db9:
+    image: mariadb:11.4
+    container_name: fondouk-db9
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpwd}
+      MARIADB_DATABASE: ${DB_NAME:-prestashop}
+      MARIADB_USER: ${DB_USER:-prestashop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-prestashop}
+    volumes:
+      - db9_data:/var/lib/mysql
+    ports:
+      - "33091:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ps9:
+    image: prestashop/prestashop:9.1-8.2
+    container_name: fondouk-ps9
+    depends_on:
+      db9:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db9
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-prestashop}
+      DB_USER: ${DB_USER:-prestashop}
+      DB_PASSWD: ${DB_PASSWORD:-prestashop}
+      DB_PREFIX: ps_
+      PS_INSTALL_AUTO: 1
+      PS_ERASE_DB: 0
+      PS_DEV_MODE: 1
+      PS_DOMAIN: localhost:8091
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@fondouk.test}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-Fondouk2026}
+      PS_LANGUAGE: fr
+      PS_COUNTRY: fr
+      PS_ENABLE_SSL: 0
+    volumes:
+      - ps9_data:/var/www/html
+      - ./prestashop-module:/var/www/html/modules/fondouk
+      - ./docker/seed:/seed:ro
+    ports:
+      - "8091:80"
+    restart: unless-stopped
+
+volumes:
+  db8_data:
+  ps8_data:
+  db9_data:
+  ps9_data:

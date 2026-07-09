@@ -1,0 +1,69 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "a3f740655669089a75124e7124ed9efa",
+    "packages": [
+        {
+            "name": "fondouk/capability-core",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../capability-core",
+                "reference": "0ff407f52c01e1b20cb16f3a55f6bd4957360a00"
+            },
+            "require": {
+                "php": ">=8.1"
+            },
+            "require-dev": {
+                "opis/json-schema": "^2.3",
+                "phpunit/phpunit": "^10.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Fondouk\\CapabilityCore\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Fondouk\\CapabilityCore\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "test": [
+                    "phpunit"
+                ]
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Cœur d'introspection agentique, neutre — ZÉRO dépendance PrestaShop. Produit le Capability Graph pivot (Blueprint artefact n°1) consommé par les adapters UCP/MCP/WebMCP.",
+            "keywords": [
+                "agentic-commerce",
+                "capability-graph",
+                "mcp",
+                "ucp"
+            ],
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {
+        "fondouk/capability-core": 20
+    },
+    "prefer-stable": true,
+    "prefer-lowest": false,
+    "platform": {
+        "php": ">=8.1"
+    },
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
+}

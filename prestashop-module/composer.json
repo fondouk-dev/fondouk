@@ -1,0 +1,31 @@
+{
+    "name": "fondouk/prestashop-module",
+    "description": "Fondouk — module PrestaShop « AI Agent Ready » (UCP, MCP). Liaison mince : embarque capability-core.",
+    "type": "prestashop-module",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.1",
+        "fondouk/capability-core": "@dev"
+    },
+    "require-dev": {
+        "prestashop/php-dev-tools": "^5.0",
+        "friendsofphp/php-cs-fixer": "^3.0"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../capability-core",
+            "options": { "symlink": false }
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "PrestaShop\\Module\\Fondouk\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "prepend-autoloader": false
+    }
+}

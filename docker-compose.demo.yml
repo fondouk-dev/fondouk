@@ -1,0 +1,79 @@
+# Fondouk — DÉMO PUBLIQUE HTTPS (une seule boutique PS9 derrière Caddy).
+#
+# Prérequis : un domaine public dont le DNS (A/AAAA) pointe vers ce serveur — demo.fondouk.dev.
+# Caddy obtient et renouvelle le certificat Let's Encrypt automatiquement.
+#
+#   docker compose -f docker-compose.demo.yml up -d
+#   docker compose -f docker-compose.demo.yml exec ps9 php -d memory_limit=-1 /seed/seed.php
+#   docker compose -f docker-compose.demo.yml exec ps9 php bin/console prestashop:module install fondouk
+#
+# Voir docs/demo-deployment.md pour la procédure complète (dont PS_SHOP_DOMAIN + trusted proxy).
+
+services:
+  caddy:
+    image: caddy:2
+    container_name: fondouk-demo-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/demo/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - ps9
+
+  db:
+    image: mariadb:11.4
+    container_name: fondouk-demo-db
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpwd}
+      MARIADB_DATABASE: ${DB_NAME:-prestashop}
+      MARIADB_USER: ${DB_USER:-prestashop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-prestashop}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ps9:
+    image: prestashop/prestashop:9.1-8.2
+    container_name: fondouk-demo-ps9
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-prestashop}
+      DB_USER: ${DB_USER:-prestashop}
+      DB_PASSWD: ${DB_PASSWORD:-prestashop}
+      DB_PREFIX: ps_
+      PS_INSTALL_AUTO: 1
+      PS_ERASE_DB: 0
+      PS_DEV_MODE: 0
+      # Domaine PUBLIC (finding tunnel : le manifest s'auto-décrit avec ce domaine).
+      PS_DOMAIN: ${DEMO_DOMAIN:-demo.fondouk.dev}
+      PS_ENABLE_SSL: 1
+      PS_FOLDER_ADMIN: admin-demo
+      PS_FOLDER_INSTALL: install-demo
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@fondouk.dev}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-ChangeMe-Demo-2026}
+      PS_LANGUAGE: fr
+      PS_COUNTRY: fr
+    volumes:
+      - ps_data:/var/www/html
+      - ./prestashop-module:/var/www/html/modules/fondouk
+      - ./docker/seed:/seed:ro
+    restart: unless-stopped
+
+volumes:
+  caddy_data:
+  caddy_config:
+  db_data:
+  ps_data:

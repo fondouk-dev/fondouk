@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fondouk.dev/schema/capability-graph.v0.json",
+  "title": "Fondouk Capability Graph",
+  "description": "Modèle LOGIQUE neutre décrivant ce qu'un système e-commerce sait exposer à un agent, indépendant de UCP/MCP/WebMCP. Jamais matérialisé en entier : une instance est un sous-ensemble (recherche, lookup, fiche) qualifié par 'subset'.",
+  "type": "object",
+  "required": ["graph_version", "shop", "generated_at", "products"],
+  "properties": {
+    "graph_version": { "const": "0", "description": "Version du schéma du graphe." },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "subset": {
+      "type": "object",
+      "description": "Qualifie la matérialisation courante (le graphe complet n'est jamais requis d'un coup).",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["search", "lookup", "product", "full"] },
+        "cursor": { "type": "string", "description": "Curseur de pagination opaque, si kind=search." },
+        "has_next": { "type": "boolean" },
+        "total_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "shop": {
+      "type": "object",
+      "required": ["id", "base_url", "default_language", "default_currency", "languages", "currencies"],
+      "properties": {
+        "id": { "type": "string", "description": "Identifiant de boutique (id_shop en PrestaShop)." },
+        "gid_base": { "type": "string", "description": "Base NEUTRE des GID = domaine de la boutique (ex. 'boutique.example'). Les GID appartiennent au marchand et survivent à une désinstallation de Fondouk (aucune marque dans l'identifiant)." },
+        "name": { "type": "string" },
+        "base_url": { "type": "string", "format": "uri" },
+        "default_language": { "type": "string", "description": "IETF BCP 47 (ex. 'fr')." },
+        "default_currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "currencies": { "type": "array", "items": { "type": "string", "pattern": "^[A-Z]{3}$" } },
+        "default_country": { "type": "string", "description": "ISO 3166-1 alpha-2, pays d'hypothèse fiscale par défaut." },
+        "prices_include_tax": { "type": "boolean", "description": "La présentation par défaut affiche-t-elle le TTC ?" }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "description": "Capacités exposables détectées par introspection.",
+      "items": { "type": "string", "examples": ["catalog.search", "catalog.lookup"] }
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "path": { "type": "string", "description": "Chemin lisible 'Racine > Parent > Enfant'." },
+          "parent_id": { "type": "string" }
+        }
+      }
+    },
+    "products": {
+      "type": "array",
+      "description": "Sous-ensemble matérialisé pour la requête courante (0..N). Vide est licite (recherche sans résultat).",
+      "items": { "$ref": "#/$defs/product" }
+    }
+  },
+  "$defs": {
+    "money": {
+      "type": "object",
+      "required": ["amount_minor", "currency"],
+      "properties": {
+        "amount_minor": { "type": "integer", "minimum": 0, "description": "Unités mineures ISO 4217 (centimes)." },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" }
+      }
+    },
+    "localized_text": {
+      "type": "object",
+      "description": "Texte par langue, clé = code langue BCP 47.",
+      "additionalProperties": { "type": "string" }
+    },
+    "product": {
+      "type": "object",
+      "required": ["id", "title", "public", "variants"],
+      "properties": {
+        "id": { "type": "string", "description": "Identifiant stable (id_product). GID neutre = gid://{shop.gid_base}/{shop.id}/product/{id_product} — appartient au marchand, sans marque Fondouk." },
+        "handle": { "type": "string", "description": "Slug URL (link_rewrite)." },
+        "reference": { "type": "string" },
+        "title": { "$ref": "#/$defs/localized_text" },
+        "description": { "$ref": "#/$defs/localized_text" },
+        "description_short": { "$ref": "#/$defs/localized_text" },
+        "url": { "$ref": "#/$defs/localized_text", "description": "URL canonique par langue." },
+        "public": { "type": "boolean", "description": "Passe le filtre 'visible par un visiteur anonyme'. En mode catalogue / prix masqué, le produit reste public=true (le visiteur le VOIT) mais ses variants ont prices=[] (il n'en voit pas le prix)." },
+        "visibility_reason": { "type": "string", "description": "Si public=false, motif (inactive, group_restricted, catalog_mode, price_hidden…)." },
+        "category_ids": { "type": "array", "items": { "type": "string" } },
+        "manufacturer": { "type": "string" },
+        "media": { "type": "array", "items": { "$ref": "#/$defs/media" } },
+        "option_axes": {
+          "type": "array",
+          "description": "Axes d'options (groupes d'attributs) et valeurs possibles.",
+          "items": {
+            "type": "object",
+            "required": ["name", "values"],
+            "properties": {
+              "name": { "$ref": "#/$defs/localized_text" },
+              "values": { "type": "array", "items": { "$ref": "#/$defs/localized_text" } }
+            }
+          }
+        },
+        "rating": {
+          "type": "object",
+          "properties": {
+            "value": { "type": "number" }, "scale_max": { "type": "number" }, "count": { "type": "integer" }
+          }
+        },
+        "variants": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/variant" } }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "required": ["id", "prices", "availability"],
+      "properties": {
+        "id": { "type": "string", "description": "GID neutre gid://{shop.gid_base}/{shop.id}/variant/{id_product}-{id_product_attribute} (…-0 si pas de déclinaison)." },
+        "sku": { "type": "string" },
+        "barcodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "value"],
+            "properties": { "type": { "type": "string", "enum": ["EAN", "UPC", "ISBN"] }, "value": { "type": "string" } }
+          }
+        },
+        "title": { "$ref": "#/$defs/localized_text" },
+        "option_values": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "axis": { "$ref": "#/$defs/localized_text" }, "value": { "$ref": "#/$defs/localized_text" } }
+          }
+        },
+        "prices": {
+          "type": "array",
+          "description": "Prix public par devise de présentation (prix courant + référence). PEUT être vide ([]) quand le prix est légitimement masqué au visiteur (mode catalogue, show_price=0) : le produit reste exposé, sans prix.",
+          "items": {
+            "type": "object",
+            "required": ["price"],
+            "properties": {
+              "price": { "$ref": "#/$defs/money", "description": "Prix public courant (réductions catalogue anonymes appliquées)." },
+              "list_price": { "$ref": "#/$defs/money", "description": "Prix de référence avant réduction." },
+              "tax_included": { "type": "boolean" },
+              "country": { "type": "string", "description": "Pays d'hypothèse fiscale de ce prix." }
+            }
+          }
+        },
+        "unit_price": {
+          "type": "object",
+          "properties": {
+            "price": { "$ref": "#/$defs/money" },
+            "measure": { "type": "object", "properties": { "value": { "type": "number" }, "unit": { "type": "string" } } },
+            "reference": { "type": "object", "properties": { "value": { "type": "number" }, "unit": { "type": "string" } } }
+          }
+        },
+        "availability": {
+          "type": "object",
+          "required": ["available"],
+          "properties": {
+            "available": { "type": "boolean" },
+            "status": { "type": "string", "enum": ["in_stock", "out_of_stock", "backorder", "preorder", "discontinued"] },
+            "quantity": { "type": "integer", "description": "Interne — NON exposé publiquement par défaut." }
+          }
+        },
+        "media": { "type": "array", "items": { "$ref": "#/$defs/media" } }
+      }
+    },
+    "media": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type": { "type": "string", "enum": ["image", "video", "model_3d"] },
+        "url": { "type": "string", "format": "uri" },
+        "alt_text": { "type": "string" },
+        "width": { "type": "integer" }, "height": { "type": "integer" }
+      }
+    }
+  }
+}

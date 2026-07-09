@@ -1,0 +1,7 @@
+# Fondouk — deny directory listing (PrestaShop validator: Security).
+# Direct execution of PHP files is already blocked by the `_PS_VERSION_` guard
+# present at the top of every source file; this only prevents index browsing.
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+Options -Indexes
