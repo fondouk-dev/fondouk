@@ -125,9 +125,7 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
                     'protocolVersion' => self::PROTOCOL_VERSION,
                     'capabilities' => ['tools' => ['listChanged' => false]],
                     'serverInfo' => ['name' => 'Fondouk', 'version' => '0.1.0'],
-                    'instructions' => 'Accès LECTURE SEULE au catalogue public du marchand. '
-                        . 'Utilise search_catalog pour découvrir des produits par mots-clés, get_product pour le détail d\'un produit précis, '
-                        . 'lookup_catalog pour récupérer plusieurs produits par identifiants. Les prix sont publics (visiteur anonyme), TTC selon le pays par défaut de la boutique.',
+                    'instructions' => $this->module->l('READ-ONLY access to the merchant\'s public catalog. Use search_catalog to discover products by keywords, get_product for the details of a specific product, lookup_catalog to fetch several products by identifiers. Prices are public (anonymous visitor), tax included according to the shop\'s default country.'),
                 ]);
 
             case 'notifications/initialized':
@@ -156,7 +154,7 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
     {
         $context = [
             'type' => 'object',
-            'description' => 'Localisation optionnelle : language (BCP 47), currency (ISO 4217), address_country (ISO 3166-1 alpha-2).',
+            'description' => $this->module->l('Optional localization: language (BCP 47), currency (ISO 4217), address_country (ISO 3166-1 alpha-2).'),
             'properties' => [
                 'language' => ['type' => 'string'],
                 'currency' => ['type' => 'string'],
@@ -167,14 +165,12 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
         return [
             [
                 'name' => 'search_catalog',
-                'description' => 'Recherche des produits dans le catalogue PUBLIC du marchand par texte libre et filtres optionnels '
-                    . '(catégories, prix). À utiliser quand tu n\'as PAS d\'identifiant produit — ex. « chaussures de running bleues à moins de 100 € ». '
-                    . 'Renvoie des produits avec prix (TTC), variantes et disponibilité. Paginé (curseur). Lecture seule.',
+                'description' => $this->module->l('Searches products in the merchant\'s PUBLIC catalog by free text and optional filters (categories, price). Use it when you do NOT have a product identifier — e.g. "blue running shoes under 100 €". Returns products with prices (tax incl.), variants and availability. Paginated (cursor). Read-only.'),
                 'inputSchema' => [
                     'type' => 'object',
                     'properties' => [
-                        'query' => ['type' => 'string', 'description' => 'Texte de recherche libre.'],
-                        'filters' => ['type' => 'object', 'description' => 'ex. {"categories":["3"],"price":{"max":10000}} (prix en unités mineures).'],
+                        'query' => ['type' => 'string', 'description' => $this->module->l('Free search text.')],
+                        'filters' => ['type' => 'object', 'description' => $this->module->l('e.g. {"categories":["3"],"price":{"max":10000}} (price in minor units).')],
                         'pagination' => ['type' => 'object', 'properties' => ['limit' => ['type' => 'integer'], 'cursor' => ['type' => 'string']]],
                         'context' => $context,
                     ],
@@ -182,19 +178,16 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
             ],
             [
                 'name' => 'get_product',
-                'description' => 'Récupère le détail complet d\'UN produit par son identifiant (obtenu via search_catalog ou lookup_catalog). '
-                    . 'À utiliser quand le client veut les détails, variantes ou disponibilité d\'un produit précis. '
-                    . 'Renvoie une erreur claire « not_found » si l\'identifiant ne correspond à aucun produit public. Lecture seule.',
+                'description' => $this->module->l('Fetches the full details of ONE product by its identifier (obtained via search_catalog or lookup_catalog). Use it when the customer wants the details, variants or availability of a specific product. Returns a clear "not_found" error if the identifier matches no public product. Read-only.'),
                 'inputSchema' => [
                     'type' => 'object',
                     'required' => ['id'],
-                    'properties' => ['id' => ['type' => 'string', 'description' => 'Identifiant produit ou variant.'], 'context' => $context],
+                    'properties' => ['id' => ['type' => 'string', 'description' => $this->module->l('Product or variant identifier.')], 'context' => $context],
                 ],
             ],
             [
                 'name' => 'lookup_catalog',
-                'description' => 'Récupère plusieurs produits par identifiants en un seul appel (batch). À utiliser quand tu as DÉJÀ des '
-                    . 'identifiants produit/variant et veux leur prix/disponibilité courants. Max 100 identifiants. Lecture seule.',
+                'description' => $this->module->l('Fetches several products by identifiers in a single call (batch). Use it when you ALREADY have product/variant identifiers and want their current price/availability. Max 100 identifiers. Read-only.'),
                 'inputSchema' => [
                     'type' => 'object',
                     'required' => ['ids'],
@@ -226,7 +219,7 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
                     pagination: new Pagination((int) ($pg['limit'] ?? Pagination::DEFAULT_LIMIT), $pg['cursor'] ?? null),
                 ));
                 $ucp = $mapper->searchResponse($graph);
-                $text = count($ucp['products']) . ' produit(s) trouvé(s).';
+                $text = sprintf($this->module->l('%d product(s) found.'), count($ucp['products']));
                 $cap = UcpCatalogMapper::CAP_SEARCH;
                 $count = count($ucp['products']);
                 break;
@@ -234,10 +227,10 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
             case 'lookup_catalog':
                 $ids = array_values(array_filter(array_map('strval', (array) ($args['ids'] ?? []))));
                 if (count($ids) > 100) {
-                    return $this->toolError($id, 'Trop d\'identifiants (max 100). Réduis la liste et réessaie.');
+                    return $this->toolError($id, $this->module->l('Too many identifiers (max 100). Shorten the list and try again.'));
                 }
                 $ucp = $mapper->lookupResponse($source->lookup(new LookupQuery($ids)));
-                $text = count($ucp['products']) . ' produit(s) résolu(s).';
+                $text = sprintf($this->module->l('%d product(s) resolved.'), count($ucp['products']));
                 $cap = UcpCatalogMapper::CAP_LOOKUP;
                 $count = count($ucp['products']);
                 break;
@@ -245,20 +238,20 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
             case 'get_product':
                 $pid = (string) ($args['id'] ?? '');
                 if ($pid === '') {
-                    return $this->toolError($id, 'Paramètre "id" manquant. Fournis un identifiant produit obtenu via search_catalog.');
+                    return $this->toolError($id, $this->module->l('Missing "id" parameter. Provide a product identifier obtained via search_catalog.'));
                 }
                 $graph = $source->getProduct(new GetProductQuery($pid));
                 if ($graph === null) {
-                    return $this->toolError($id, 'Aucun produit public ne correspond à l\'identifiant "' . $pid . '". Utilise search_catalog pour trouver des produits, puis réessaie avec un identifiant renvoyé.');
+                    return $this->toolError($id, sprintf($this->module->l('No public product matches the identifier "%s". Use search_catalog to find products, then retry with a returned identifier.'), $pid));
                 }
                 $ucp = $mapper->getProductResponse($graph);
-                $text = 'Produit : ' . ($ucp['product']['title'] ?? $pid);
+                $text = sprintf($this->module->l('Product: %s'), $ucp['product']['title'] ?? $pid);
                 $cap = UcpCatalogMapper::CAP_LOOKUP;
                 $count = 1;
                 break;
 
             default:
-                return $this->error($id, -32602, 'Outil inconnu : "' . $name . '". Outils disponibles : search_catalog, get_product, lookup_catalog.');
+                return $this->error($id, -32602, sprintf($this->module->l('Unknown tool: "%s". Available tools: search_catalog, get_product, lookup_catalog.'), $name));
         }
 
         AccessLogger::log($this->context, 'mcp', $cap, 200, $count, (int) round((microtime(true) - $start) * 1000), $locale->idLang, $locale->idCurrency);

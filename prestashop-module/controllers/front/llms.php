@@ -33,15 +33,15 @@ class FondoukLlmsModuleFrontController extends ModuleFrontController
     {
         $shop = (new PrestaShopShopProfileSource($this->context))->shop();
         $base = $shop->baseUrl;
-        $name = $shop->name ?: 'Boutique';
+        $name = $shop->name ?: $this->module->l('Store');
 
         $txt = '# ' . $name . "\n\n"
-            . "> Cette boutique est interrogeable par des agents IA via des interfaces structurées.\n\n"
-            . '- Langues : ' . implode(', ', $shop->languages) . "\n"
-            . '- Devises : ' . implode(', ', $shop->currencies) . "\n\n"
-            . "## Interfaces agent\n\n"
-            . '- Manifest UCP (catalogue interrogeable en temps réel — prix, stock) : ' . $base . "/.well-known/ucp\n"
-            . '- Documentation du protocole UCP : https://ucp.dev/' . UcpManifestBuilder::UCP_VERSION . "/\n";
+            . '> ' . $this->module->l('This store is queryable by AI agents through structured interfaces.') . "\n\n"
+            . '- ' . $this->module->l('Languages:') . ' ' . implode(', ', $shop->languages) . "\n"
+            . '- ' . $this->module->l('Currencies:') . ' ' . implode(', ', $shop->currencies) . "\n\n"
+            . '## ' . $this->module->l('Agent interfaces') . "\n\n"
+            . '- ' . $this->module->l('UCP Manifest (real-time queryable catalog — price, stock):') . ' ' . $base . "/.well-known/ucp\n"
+            . '- ' . $this->module->l('UCP protocol documentation:') . ' https://ucp.dev/' . UcpManifestBuilder::UCP_VERSION . "/\n";
 
         header('Content-Type: text/markdown; charset=utf-8');
         header('Cache-Control: public, max-age=300');

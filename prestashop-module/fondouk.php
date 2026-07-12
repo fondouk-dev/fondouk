@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '0.1.0';
+        $this->version = '1.1.0';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -35,7 +35,7 @@ class Fondouk extends Module
 
         $this->displayName = $this->l('Fondouk — AI Agent Ready (UCP, MCP)');
         $this->description = $this->l('Makes the store visible and queryable by AI agents (UCP, MCP) — read-only, zero configuration.');
-        $this->confirmUninstall = $this->l('Désinstaller Fondouk ? Le manifest et les endpoints agent ne seront plus servis.');
+        $this->confirmUninstall = $this->l('Uninstall Fondouk? The manifest and agent endpoints will no longer be served.');
     }
 
     public function install(): bool
