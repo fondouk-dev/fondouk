@@ -54,3 +54,4 @@ $_MODULE['<{fondouk}prestashop>diagnostic_d78a23690010fca3c728583d998aefbb'] = '
 $_MODULE['<{fondouk}prestashop>diagnostic_db8364551ec38ac92a995fb6398bac21'] = 'لا شيء.';
 $_MODULE['<{fondouk}prestashop>diagnostic_4900b6f63478aa2ff80a170781a8a4a4'] = 'موجودة.';
 $_MODULE['<{fondouk}prestashop>diagnostic_4f7b50bec76bcf2b862eeb2140701427'] = 'نعم.';
+$_MODULE['<{fondouk}prestashop>diagnostic_7b3bd7e258aa745f19c2ba647e408600'] = '<strong>Fondouk Pro مُفعَّل</strong> — وهو يتولّى خدمة الوكلاء (البيان، الكتالوج، MCP، llms.txt). هذه الوحدة المجانية في وضع الانتظار: لا تسجّل أي مسار لتفادي أي تعارض. أَلغِ تثبيت Fondouk Pro أو عطّله لإعادة الخدمة إلى هذه الوحدة.';

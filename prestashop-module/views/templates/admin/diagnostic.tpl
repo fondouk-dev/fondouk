@@ -10,9 +10,16 @@
 <div class="panel">
   <h3><i class="icon-rss"></i> {l s="Fondouk — diagnostics" mod='fondouk'}</h3>
 
-  <p class="help-block">
-    {l s="Module <strong>operational</strong>: the UCP manifest, the REST catalog API and the MCP server are being served. Read-only, zero configuration — nothing to set here." mod='fondouk'}
-  </p>
+  {if $fondouk_pro_active}
+    <div class="alert alert-info">
+      <i class="icon-pause"></i>
+      {l s="<strong>Fondouk Pro is active</strong> — it serves the agent surface (manifest, catalog, MCP, llms.txt). This free module is on standby: it registers no routes to avoid a conflict. Uninstall or disable Fondouk Pro to hand the service back to this module." mod='fondouk'}
+    </div>
+  {else}
+    <p class="help-block">
+      {l s="Module <strong>operational</strong>: the UCP manifest, the REST catalog API and the MCP server are being served. Read-only, zero configuration — nothing to set here." mod='fondouk'}
+    </p>
+  {/if}
 
   <h4>{l s="Agent endpoints (operational)" mod='fondouk'}</h4>
   <ul class="list-unstyled">

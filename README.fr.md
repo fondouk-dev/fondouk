@@ -23,6 +23,10 @@ Quand un client demande à ChatGPT, Gemini ou Claude *« où puis-je acheter ça
 - Tout est généré par **introspection** de la boutique — catalogue, déclinaisons, stock, prix publics, langues, devises. Aucun écran de réglages.
 - **Lecture seule et public uniquement** : ce qu'un visiteur anonyme voit sur la vitrine est ce qu'un agent voit. Rien de plus. Pas de données clients, pas de prix B2B/groupe, pas de panier, pas de paiement.
 
+## Gratuit + Pro ensemble ?
+
+Il existe un module payant, **Fondouk Pro** (tableau de bord agent + contrôle par agent). Depuis la **v1.2**, les deux **cohabitent proprement** : quand Fondouk Pro est installé et actif, ce module gratuit se **met poliment en veille** — il n'enregistre plus ses routes, si bien que seul le Pro sert `/.well-known/ucp`, le catalogue, MCP et `llms.txt` (aucun conflit, une seule écriture de télémétrie). Désinstallez le Pro et ce module **reprend le service automatiquement**. Vous n'avez jamais à choisir l'un *ou* l'autre, et vous pouvez désinstaller l'un ou l'autre à tout moment.
+
 ## Démarrage rapide — marchand
 
 1. Téléchargez le zip du module (`fondouk.zip`) depuis la release, ou construisez-le : `MODULE_NAME=fondouk ./build/package.sh`.

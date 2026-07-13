@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.1.0';
+        $this->version = '1.2.0';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -159,8 +159,21 @@ class Fondouk extends Module
      *
      * @return array<string,array<string,mixed>>
      */
+    /** Technical name of the paid module that supersedes this one when present. */
+    public const PRO_MODULE = 'fondoukpro';
+
     public function hookModuleRoutes($params)
     {
+        // Polite deference (v1.2, coexistence): if Fondouk Pro is installed AND
+        // active, it fully serves the agent surface (manifest, catalog, MCP, llms.txt).
+        // This module then stands by — it registers NO routes, so there is never a
+        // duplicate /.well-known/ucp registration. The reverse never happens: the Pro
+        // never defers to the free module. Uninstalling the Pro makes these routes
+        // come back automatically (this hook is re-evaluated on route-cache rebuild).
+        if (Module::isInstalled(self::PRO_MODULE) && Module::isEnabled(self::PRO_MODULE)) {
+            return [];
+        }
+
         $mod = ['fc' => 'module', 'module' => 'fondouk'];
 
         return [
@@ -218,6 +231,8 @@ class Fondouk extends Module
             'fondouk_llms_url' => $base . '/llms.txt',
             'fondouk_search_url' => $base . '/fondouk/ucp/catalog/search',
             'fondouk_mcp_url' => $base . '/fondouk/ucp/mcp',
+            // Standby: when Fondouk Pro is active, this module defers the whole agent surface.
+            'fondouk_pro_active' => Module::isInstalled(self::PRO_MODULE) && Module::isEnabled(self::PRO_MODULE),
         ]);
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/diagnostic.tpl');
