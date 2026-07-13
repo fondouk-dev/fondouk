@@ -41,6 +41,7 @@ class FondoukLlmsModuleFrontController extends ModuleFrontController
             . '- ' . $this->module->l('Currencies:') . ' ' . implode(', ', $shop->currencies) . "\n\n"
             . '## ' . $this->module->l('Agent interfaces') . "\n\n"
             . '- ' . $this->module->l('UCP Manifest (real-time queryable catalog — price, stock):') . ' ' . $base . "/.well-known/ucp\n"
+            . '- ' . $this->module->l('Catalog search (GET convenience for agentic browsers):') . ' ' . $base . "/fondouk/ucp/catalog/search?q={text}\n"
             . '- ' . $this->module->l('UCP protocol documentation:') . ' https://ucp.dev/' . UcpManifestBuilder::UCP_VERSION . "/\n";
 
         header('Content-Type: text/markdown; charset=utf-8');

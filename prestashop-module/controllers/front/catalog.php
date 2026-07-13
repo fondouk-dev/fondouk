@@ -52,7 +52,12 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
     public function initContent()
     {
         $start = microtime(true);
-        $action = (string) Tools::getValue('action', 'search');
+        // Action from the route param; on the bare /fondouk/ucp entry (what agentic browsers
+        // probe) derive it from the `capability` query param. Default: search.
+        $action = (string) Tools::getValue('action', '');
+        if ($action === '') {
+            $action = $this->actionFromCapability((string) Tools::getValue('capability', ''));
+        }
 
         // --- 1. Rate limiting (erreur transport 429) ---
         $rl = (new RateLimiter(self::RATE_LIMIT_PER_MIN, self::RATE_LIMIT_BURST))->hit((string) Tools::getRemoteAddr());
@@ -69,6 +74,41 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         if (!is_array($body)) {
             $body = [];
         }
+
+        // GET bridge (v1.2.1, « meet agents where they are »). The canonical UCP transport is
+        // POST (unchanged), but 2026 agentic browsers (Comet…) query in GET. We therefore
+        // accept query params as a NON-NORMATIVE convenience:
+        //   GET /catalog/search?q=…|query=…&limit=…&cursor=…
+        //   GET /catalog/product?id=…
+        //   GET /catalog/lookup?ids=a,b,c
+        // Rate-limit, cache and telemetry are identical to POST.
+        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+            if ($action === 'search') {
+                $q = (string) Tools::getValue('q', Tools::getValue('query', ''));
+                if ($q !== '' && !isset($body['query'])) {
+                    $body['query'] = $q;
+                }
+                $limit = (int) Tools::getValue('limit', 0);
+                if ($limit > 0) {
+                    $body['pagination']['limit'] = $limit;
+                }
+                $cursor = (string) Tools::getValue('cursor', '');
+                if ($cursor !== '') {
+                    $body['pagination']['cursor'] = $cursor;
+                }
+            } elseif ($action === 'product') {
+                $id = (string) Tools::getValue('id', '');
+                if ($id !== '' && !isset($body['id'])) {
+                    $body['id'] = $id;
+                }
+            } elseif ($action === 'lookup') {
+                $ids = (string) Tools::getValue('ids', '');
+                if ($ids !== '' && !isset($body['ids'])) {
+                    $body['ids'] = array_values(array_filter(array_map('trim', explode(',', $ids))));
+                }
+            }
+        }
+
         $ctx = is_array($body['context'] ?? null) ? $body['context'] : [];
 
         // --- 2. Validation de pagination / batch (erreurs transport 400) ---
@@ -141,6 +181,19 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         echo json_encode($error, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         AccessLogger::log($this->context, $action, $cap, $status, $count, (int) round((microtime(true) - $start) * 1000));
         exit;
+    }
+
+    /** Maps a UCP capability id (from ?capability=) to an action; defaults to search. */
+    private function actionFromCapability(string $capability): string
+    {
+        if (stripos($capability, 'product') !== false) {
+            return 'product';
+        }
+        if (stripos($capability, 'lookup') !== false) {
+            return 'lookup';
+        }
+
+        return 'search';
     }
 
     private function validCursor(?string $cursor): bool

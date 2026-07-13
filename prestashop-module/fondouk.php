@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.2.0';
+        $this->version = '1.2.1';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -206,6 +206,14 @@ class Fondouk extends Module
                 'keywords' => [],
                 'controller' => 'catalog',
                 'params' => $mod + ['action' => 'product'],
+            ],
+            // Bare REST base (v1.2.1): GET /fondouk/ucp?capability=…&q=… — the entry agentic
+            // browsers probe. No action → the catalog controller derives it from ?capability.
+            'module-fondouk-ucp-base' => [
+                'rule' => 'fondouk/ucp',
+                'keywords' => [],
+                'controller' => 'catalog',
+                'params' => $mod,
             ],
             'module-fondouk-mcp' => [
                 'rule' => 'fondouk/ucp/mcp',
