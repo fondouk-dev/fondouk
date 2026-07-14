@@ -11,12 +11,12 @@ declare(strict_types=1);
 
 namespace PrestaShop\Module\Fondouk\PrestaShop;
 
-use Fondouk\CapabilityCore\Contract\ShopProfileSource;
-use Fondouk\CapabilityCore\Graph\Shop;
-
 if (!defined('_PS_VERSION_')) {
     exit;
 }
+
+use Fondouk\CapabilityCore\Contract\ShopProfileSource;
+use Fondouk\CapabilityCore\Graph\Shop;
 
 /**
  * Implémentation PrestaShop du port ShopProfileSource : construit l'identité et

@@ -11,6 +11,10 @@ declare(strict_types=1);
 
 namespace PrestaShop\Module\Fondouk\PrestaShop;
 
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
 use Fondouk\CapabilityCore\Contract\CatalogSource;
 use Fondouk\CapabilityCore\Graph\Availability;
 use Fondouk\CapabilityCore\Graph\CapabilityGraph;
@@ -24,10 +28,6 @@ use Fondouk\CapabilityCore\Graph\VariantPrice;
 use Fondouk\CapabilityCore\Query\GetProductQuery;
 use Fondouk\CapabilityCore\Query\LookupQuery;
 use Fondouk\CapabilityCore\Query\SearchQuery;
-
-if (!defined('_PS_VERSION_')) {
-    exit;
-}
 
 /**
  * Implémentation PrestaShop du port CatalogSource : introspection catalogue par les
