@@ -43,8 +43,9 @@ final class AccessLogger
             $ip = (string) \Tools::getRemoteAddr();
             $ipHash = ($ip !== '' && $salt !== '') ? hash('sha256', $ip . $salt) : null;
 
-            $ucpAgent = $_SERVER['HTTP_UCP_AGENT'] ?? null;
-            $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+            $headers = \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers;
+            $ucpAgent = $headers->get('UCP-Agent');
+            $userAgent = $headers->get('User-Agent');
 
             \Db::getInstance()->insert('fondouk_access_log', [
                 'date_add' => date('Y-m-d H:i:s'),

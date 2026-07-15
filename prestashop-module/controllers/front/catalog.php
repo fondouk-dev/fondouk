@@ -82,7 +82,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         //   GET /catalog/product?id=…
         //   GET /catalog/lookup?ids=a,b,c
         // Rate-limit, cache and telemetry are identical to POST.
-        if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
+        if (\Symfony\Component\HttpFoundation\Request::createFromGlobals()->getMethod() === 'GET') {
             if ($action === 'search') {
                 $q = (string) Tools::getValue('q', Tools::getValue('query', ''));
                 if ($q !== '' && !isset($body['query'])) {
@@ -126,8 +126,8 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         }
 
         $langIso = (string) ($ctx['language'] ?? '');
-        if ($langIso === '' && !empty($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
-            $langIso = (string) $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+        if ($langIso === '') {
+            $langIso = (string) \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers->get('Accept-Language', '');
         }
         $locale = SearchLocale::resolve($langIso, (string) ($ctx['currency'] ?? ''), (string) ($ctx['address_country'] ?? ''));
 

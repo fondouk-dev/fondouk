@@ -46,7 +46,7 @@ class FondoukUcpModuleFrontController extends ModuleFrontController
         $json = $this->annotateGetConvenience($builder->toJson(), $base);
         $etag = '"' . md5($json) . '"';
 
-        $ifNoneMatch = isset($_SERVER['HTTP_IF_NONE_MATCH']) ? trim((string) $_SERVER['HTTP_IF_NONE_MATCH']) : '';
+        $ifNoneMatch = trim((string) \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers->get('If-None-Match', ''));
 
         header('Access-Control-Allow-Origin: *');
         header('Cache-Control: public, max-age=300');

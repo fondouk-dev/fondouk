@@ -107,6 +107,10 @@ if find "$MOD" -name 'config_*.xml' | grep -q .; then echo "  ✗ config_*.xml g
 [ "$VFAIL" -eq 0 ] || { echo "ÉCHEC: conformité validateur non satisfaite (voir ci-dessus)"; exit 1; }
 echo "  ✓ guard + en-tête licence sur chaque .php du module, .htaccess présent, description EN"
 
+# 7ter. Garde-fou sécurité (SQL injection · XSS · fonctions interdites · superglobales · fichiers)
+echo "--- sécurité (règles Addons : SQL/XSS/RCE/superglobales) ---"
+bash "$ROOT/build/check-security.sh" "$MOD" || { echo "ÉCHEC: règles de sécurité non respectées (voir docs/SECURITY-RULES.md)"; exit 1; }
+
 # 8. Lint de tous les .php du zip (conteneur)
 docker run --rm -v "$STAGE":/stage --entrypoint bash "$IMG" -lc '
   err=0; for f in $(find /stage/'"$LOWER"' -name "*.php"); do php -l "$f" >/dev/null || { echo "LINT FAIL $f"; err=1; }; done

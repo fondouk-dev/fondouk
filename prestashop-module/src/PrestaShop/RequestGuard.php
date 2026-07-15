@@ -28,13 +28,16 @@ final class RequestGuard
      */
     public static function jsonBody(int $max = self::MAX_BODY): array
     {
-        $contentLength = isset($_SERVER['CONTENT_LENGTH']) ? (int) $_SERVER['CONTENT_LENGTH'] : 0;
+        $request = \Symfony\Component\HttpFoundation\Request::createFromGlobals();
+        $contentLength = (int) $request->server->get('CONTENT_LENGTH', 0);
         if ($contentLength > $max) {
             return [true, null];
         }
 
-        // Lit au plus $max+1 octets : si on dépasse, c'est trop volumineux (Content-Length absent/menti).
-        $raw = (string) file_get_contents('php://input', false, null, 0, $max + 1);
+        // Lit au plus $max+1 octets via le flux Symfony : si on dépasse, c'est trop volumineux
+        // (Content-Length absent/menti). Lecture bornée = anti-DoS mémoire (Gate 2 F2a).
+        $stream = $request->getContent(true);
+        $raw = is_resource($stream) ? (string) stream_get_contents($stream, $max + 1) : '';
         if (strlen($raw) > $max) {
             return [true, null];
         }
