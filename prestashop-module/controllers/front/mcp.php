@@ -12,6 +12,9 @@
  * @copyright 2026 Synapsea
  * @license   https://opensource.org/licenses/MIT MIT License
  */
+
+declare(strict_types=1);
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -285,7 +288,7 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
     private function send($payload): void
     {
         header('Content-Type: application/json; charset=utf-8');
-        echo json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $this->ajaxRender(json_encode($payload, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         exit;
     }
 }

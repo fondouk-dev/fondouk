@@ -7,6 +7,9 @@
  * @copyright 2026 Synapsea
  * @license   https://opensource.org/licenses/MIT MIT License
  */
+
+declare(strict_types=1);
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -47,7 +50,7 @@ class FondoukLlmsModuleFrontController extends ModuleFrontController
         header('Content-Type: text/markdown; charset=utf-8');
         header('Cache-Control: public, max-age=300');
         header('Access-Control-Allow-Origin: *');
-        echo $txt;
+        $this->ajaxRender($txt);
         exit;
     }
 }

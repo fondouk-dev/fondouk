@@ -12,6 +12,9 @@
  * @copyright 2026 Synapsea
  * @license   https://opensource.org/licenses/MIT MIT License
  */
+
+declare(strict_types=1);
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -31,6 +34,7 @@ use PrestaShop\Module\Fondouk\PrestaShop\RateLimiter;
 use PrestaShop\Module\Fondouk\PrestaShop\RequestGuard;
 use PrestaShop\Module\Fondouk\PrestaShop\ResponseCache;
 use PrestaShop\Module\Fondouk\PrestaShop\SearchLocale;
+use Symfony\Component\HttpFoundation\Request;
 
 class FondoukCatalogModuleFrontController extends ModuleFrontController
 {
@@ -82,7 +86,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         //   GET /catalog/product?id=…
         //   GET /catalog/lookup?ids=a,b,c
         // Rate-limit, cache and telemetry are identical to POST.
-        if (\Symfony\Component\HttpFoundation\Request::createFromGlobals()->getMethod() === 'GET') {
+        if (Request::createFromGlobals()->getMethod() === 'GET') {
             if ($action === 'search') {
                 $q = (string) Tools::getValue('q', Tools::getValue('query', ''));
                 if ($q !== '' && !isset($body['query'])) {
@@ -127,7 +131,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
 
         $langIso = (string) ($ctx['language'] ?? '');
         if ($langIso === '') {
-            $langIso = (string) \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers->get('Accept-Language', '');
+            $langIso = (string) Request::createFromGlobals()->headers->get('Accept-Language', '');
         }
         $locale = SearchLocale::resolve($langIso, (string) ($ctx['currency'] ?? ''), (string) ($ctx['address_country'] ?? ''));
 
@@ -168,7 +172,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         header('Access-Control-Allow-Origin: *');
         header('X-Fondouk-Cache: ' . $cacheState);
         header('X-Fondouk-RateLimit-Remaining: ' . $rl['remaining']);
-        echo $json;
+        $this->ajaxRender($json);
     }
 
     /** Erreur transport (HTTP 4xx) — modèle à deux couches §2.3. Termine la requête. */
@@ -178,7 +182,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
         header('Content-Type: application/json; charset=utf-8');
         header('Access-Control-Allow-Origin: *');
         header('X-Fondouk-RateLimit-Remaining: ' . $rl['remaining']);
-        echo json_encode($error, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        $this->ajaxRender(json_encode($error, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         AccessLogger::log($this->context, $action, $cap, $status, $count, (int) round((microtime(true) - $start) * 1000));
         exit;
     }

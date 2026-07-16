@@ -93,9 +93,12 @@ while IFS= read -r f; do
     # Code : garde _PS_VERSION_, en-tête licence, docbloc COLLÉ à <?php (sniffs « missing
     # file doc comment » + « no blank lines before the file comment »).
     grep -q "!defined('_PS_VERSION_')" "$f" || { echo "  ✗ garde _PS_VERSION_ absente : $rel"; VFAIL=1; }
+    # La garde doit précéder tout CODE EXÉCUTABLE (require/include/class) — un docblock
+    # de fichier + declare(strict_types=1) avant elle est conforme (aucune exécution).
     gl=$(grep -n "!defined('_PS_VERSION_')" "$f" | head -1 | cut -d: -f1 || true)
-    if [ -n "$gl" ] && [ "$gl" -gt 15 ]; then
-        echo "  ✗ garde _PS_VERSION_ trop bas (ligne $gl > 15 ; le validateur Addons la veut dans les ~15 premières lignes) : $rel"; VFAIL=1
+    cl=$(grep -nE "^[[:space:]]*(require|include|class )" "$f" | head -1 | cut -d: -f1 || true)
+    if [ -n "$gl" ] && [ -n "$cl" ] && [ "$gl" -gt "$cl" ]; then
+        echo "  ✗ garde _PS_VERSION_ APRÈS du code exécutable (require/include/class ligne $cl) : $rel"; VFAIL=1
     fi
     head -n 15 "$f" | grep -q "@license" || { echo "  ✗ en-tête licence absent : $rel"; VFAIL=1; }
     [[ "$(sed -n '2p' "$f")" == /\** ]] || { echo "  ✗ ligne vide avant le file comment : $rel"; VFAIL=1; }

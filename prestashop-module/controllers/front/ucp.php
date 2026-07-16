@@ -8,6 +8,9 @@
  * @copyright 2026 Synapsea
  * @license   https://opensource.org/licenses/MIT MIT License
  */
+
+declare(strict_types=1);
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -17,6 +20,7 @@ require_once _PS_MODULE_DIR_ . 'fondouk/vendor/autoload.php';
 use Fondouk\CapabilityCore\Adapter\Ucp\UcpManifestBuilder;
 use PrestaShop\Module\Fondouk\PrestaShop\AccessLogger;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopShopProfileSource;
+use Symfony\Component\HttpFoundation\Request;
 
 class FondoukUcpModuleFrontController extends ModuleFrontController
 {
@@ -46,7 +50,7 @@ class FondoukUcpModuleFrontController extends ModuleFrontController
         $json = $this->annotateGetConvenience($builder->toJson(), $base);
         $etag = '"' . md5($json) . '"';
 
-        $ifNoneMatch = trim((string) \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers->get('If-None-Match', ''));
+        $ifNoneMatch = trim((string) Request::createFromGlobals()->headers->get('If-None-Match', ''));
 
         header('Access-Control-Allow-Origin: *');
         header('Cache-Control: public, max-age=300');
@@ -60,7 +64,7 @@ class FondoukUcpModuleFrontController extends ModuleFrontController
 
         header('Content-Type: application/json; charset=utf-8');
         AccessLogger::log($this->context, 'manifest', null, 200, null, (int) round((microtime(true) - $start) * 1000));
-        echo $json;
+        $this->ajaxRender($json);
         exit;
     }
 
