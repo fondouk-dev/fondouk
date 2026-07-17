@@ -53,7 +53,7 @@ jobs:
           - Prix en contexte visiteur anonyme ; rate limiting + cache intégrés.
 
           ## Compatibilité
-          PrestaShop **8.2** et **9.1** · URL simplifiées + HTTPS requis · UCP \`2026-04-08\`.
+          PrestaShop **8.0 à 9.2** · URL simplifiées + HTTPS requis · UCP \`2026-04-08\`.
 
           Démo : https://demo.fondouk.dev — Licence MIT, un projet Synapsea.
           EOF

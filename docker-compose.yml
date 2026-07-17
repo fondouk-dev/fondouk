@@ -1,9 +1,12 @@
 # Fondouk — environnement de développement double-boutique (Semaine 1, Étape 1)
 #
 # Deux stacks PrestaShop indépendantes, alignées sur la spec (§0 TECHNICAL-SPEC) :
-#   - ps8 : PrestaShop 8.2.x sur PHP 8.1  (port 8081)
-#   - ps9 : PrestaShop 9.1.x sur PHP 8.2  (port 8091)
+#   - ps8  : PrestaShop 8.2.x sur PHP 8.1  (port 8081)
+#   - ps9  : PrestaShop 9.1.x sur PHP 8.2  (port 8091)
+#   - ps80 : PrestaShop 8.0.x sur PHP 8.1  (port 8080)  — compat étendue (plancher 8.0.0)
+#   - ps92 : PrestaShop 9.2.x sur PHP 8.2  (port 8092)  — compat étendue (plafond 9.2.x)
 # Chacune a sa propre base MariaDB. Le module et le seed sont montés en bind-mount.
+# ps80/ps92 montent AUSSI le module Pro (../fondouk-pro) pour cohabitation + migration.
 #
 # Démarrage :  docker compose up -d       (première fois : ~2-4 min d'auto-install par boutique)
 # Boutiques :  http://localhost:8081  (PS8)   http://localhost:8091  (PS9)
@@ -116,8 +119,121 @@ services:
       - "8091:80"
     restart: unless-stopped
 
+  # ---------- PrestaShop 8.0 / PHP 8.1 (cible compat étendue) ----------
+  # Ajoutée pour valider le plancher déclaré ps_versions_compliancy=8.0.0.
+  # Monte AUSSI le module Pro (cohabitation + migration + 3 harnais).
+  db80:
+    image: mariadb:11.4
+    container_name: fondouk-db80
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpwd}
+      MARIADB_DATABASE: ${DB_NAME:-prestashop}
+      MARIADB_USER: ${DB_USER:-prestashop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-prestashop}
+    volumes:
+      - db80_data:/var/lib/mysql
+    ports:
+      - "33080:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ps80:
+    image: prestashop/prestashop:8.0-8.1
+    container_name: fondouk-ps80
+    depends_on:
+      db80:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db80
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-prestashop}
+      DB_USER: ${DB_USER:-prestashop}
+      DB_PASSWD: ${DB_PASSWORD:-prestashop}
+      DB_PREFIX: ps_
+      PS_INSTALL_AUTO: 1
+      PS_ERASE_DB: 0
+      PS_DEV_MODE: 1
+      PS_DOMAIN: localhost:8080
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@fondouk.test}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-Fondouk2026}
+      PS_LANGUAGE: fr
+      PS_COUNTRY: fr
+      PS_ENABLE_SSL: 0
+    volumes:
+      - ps80_data:/var/www/html
+      - ./prestashop-module:/var/www/html/modules/fondouk
+      - ../fondouk-pro/fondoukpro-module:/var/www/html/modules/fondoukpro
+      - ./docker/seed:/seed:ro
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+
+  # ---------- PrestaShop 9.2 / PHP 8.2 (cible compat étendue) ----------
+  # Ajoutée pour valider le plafond visé (fiche max 9.2.x).
+  db92:
+    image: mariadb:11.4
+    container_name: fondouk-db92
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpwd}
+      MARIADB_DATABASE: ${DB_NAME:-prestashop}
+      MARIADB_USER: ${DB_USER:-prestashop}
+      MARIADB_PASSWORD: ${DB_PASSWORD:-prestashop}
+    volumes:
+      - db92_data:/var/lib/mysql
+    ports:
+      - "33092:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  ps92:
+    image: prestashop/prestashop:9.2.x-8.2
+    container_name: fondouk-ps92
+    depends_on:
+      db92:
+        condition: service_healthy
+    environment:
+      DB_SERVER: db92
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-prestashop}
+      DB_USER: ${DB_USER:-prestashop}
+      DB_PASSWD: ${DB_PASSWORD:-prestashop}
+      DB_PREFIX: ps_
+      PS_INSTALL_AUTO: 1
+      PS_ERASE_DB: 0
+      PS_DEV_MODE: 1
+      PS_DOMAIN: localhost:8092
+      PS_FOLDER_ADMIN: admin-dev
+      PS_FOLDER_INSTALL: install-dev
+      ADMIN_MAIL: ${ADMIN_MAIL:-admin@fondouk.test}
+      ADMIN_PASSWD: ${ADMIN_PASSWD:-Fondouk2026}
+      PS_LANGUAGE: fr
+      PS_COUNTRY: fr
+      PS_ENABLE_SSL: 0
+    volumes:
+      - ps92_data:/var/www/html
+      - ./prestashop-module:/var/www/html/modules/fondouk
+      - ../fondouk-pro/fondoukpro-module:/var/www/html/modules/fondoukpro
+      - ./docker/seed:/seed:ro
+    ports:
+      - "8092:80"
+    restart: unless-stopped
+
 volumes:
   db8_data:
   ps8_data:
   db9_data:
   ps9_data:
+  db80_data:
+  ps80_data:
+  db92_data:
+  ps92_data:

@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.2.4';
+        $this->version = '1.2.5';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -53,6 +53,15 @@ class Fondouk extends Module
 
     public function uninstall(): bool
     {
+        // Coexistence : si Fondouk Pro est installé, la table d'accès partagée, le salt IP
+        // et le compteur de version lui servent ENCORE. On ne détruit donc rien tant que le
+        // Pro est là — sinon désinstaller le gratuit effacerait la télémétrie et le salt du Pro
+        // (qui, lui, ne purge jamais à sa propre désinstallation : migration-safe, purge
+        // explicite via l'écran Conformité). La garde n'est donc nécessaire que côté gratuit.
+        if (Module::isInstalled(self::PRO_MODULE)) {
+            return parent::uninstall();
+        }
+
         return $this->uninstallDb()
             && Configuration::deleteByName('FONDOUK_IP_SALT')
             && Configuration::deleteByName('FONDOUK_CATALOG_VERSION')

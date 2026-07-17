@@ -33,6 +33,11 @@ cp -r "$ROOT/docker/demo" "$ROOT/docker/seed" "$ROOT/docker/README.md" "$OUT/doc
 find "$OUT" -type d \( -name vendor -o -name '.phpunit.cache' \) -prune -exec rm -rf {} + 2>/dev/null || true
 find "$OUT" \( -name '.php-cs-fixer.cache' -o -name '.DS_Store' -o -name 'config_*.xml' \) -delete 2>/dev/null || true
 
+# ---------- Purge scripts d'EXPLOITATION (jamais publics) ----------
+# scripts/demo-addons/* pilote le serveur de démo Hetzner (IP + chemin de clé SSH) :
+# opérationnel, hors périmètre public. Le garde-fou anti-fuite le refuserait sinon.
+rm -rf "$OUT/scripts/demo-addons"
+
 # ---------- Nettoyage + contrôle (helper privé, présent uniquement dans le repo source) ----------
 if [ -f "$ROOT/build/_export_clean.py" ]; then
   python3 "$ROOT/build/_export_clean.py" "$OUT" || { echo "ÉCHEC: contrôle de l'export non satisfait."; exit 1; }

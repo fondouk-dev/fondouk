@@ -1,0 +1,118 @@
+name: Auto-release public
+
+# Pont automatique LAB -> dépôt public du module gratuit (fondouk-dev/fondouk).
+#
+# Déclencheur : push sur `main` du lab. Logique :
+#   1. lit $this->version dans prestashop-module/fondouk.php
+#   2. si le tag vX.Y.Z existe déjà        -> rien à faire (pas de nouveau bump)
+#   3. sinon, EXIGE une entrée "## [X.Y.Z]" dans prestashop-module/CHANGELOG.md
+#      (sinon ÉCHEC : on ne publie jamais une version sans changelog à jour)
+#   4. tague vX.Y.Z sur le lab
+#   5. exporte l'arbo publique (build/export-public.sh) et la pousse sur
+#      fondouk-dev/fondouk (+ tag) -> déclenche le workflow "Release" (zip + GitHub Release)
+#
+# PRÉREQUIS (une seule fois) — clé de déploiement SSH :
+#   - la CLÉ PUBLIQUE ajoutée sur fondouk-dev/fondouk
+#       (Settings -> Deploy keys -> Add deploy key -> cocher "Allow write access") ;
+#   - la CLÉ PRIVÉE stockée en secret `PUBLIC_DEPLOY_KEY` sur le repo lab.
+#   Sans le secret, le tag est posé sur le lab mais le push public est sauté
+#   (avertissement, pas d'échec).
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write        # taguer le lab avec github.token
+
+concurrency: auto-release-public
+
+jobs:
+  autorelease:
+    name: Bump détecté -> tag + push public
+    runs-on: ubuntu-latest
+    # Ne tourne QUE sur le miroir lab (jamais sur le public ni un fork).
+    if: github.repository == 'fondouk-dev/fondouk-lab'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0            # historique complet + tags
+
+      - name: Lire la version du module
+        id: v
+        run: |
+          set -euo pipefail
+          VER="$(grep -oE "this->version *= *'[0-9]+\.[0-9]+\.[0-9]+'" prestashop-module/fondouk.php \
+                 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+          [ -n "$VER" ] || { echo "::error::version introuvable dans prestashop-module/fondouk.php"; exit 1; }
+          echo "version=$VER" >> "$GITHUB_OUTPUT"
+          echo "tag=v$VER"    >> "$GITHUB_OUTPUT"
+          echo "Version module : $VER"
+
+      - name: Nouveau bump ?
+        id: gate
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/${{ steps.v.outputs.tag }}" >/dev/null; then
+            echo "new=0" >> "$GITHUB_OUTPUT"
+            echo "::notice::${{ steps.v.outputs.tag }} déjà tagué — rien à publier."
+          else
+            echo "new=1" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Exiger le CHANGELOG à jour
+        if: steps.gate.outputs.new == '1'
+        run: |
+          set -euo pipefail
+          VER="${{ steps.v.outputs.version }}"
+          grep -qE "^##[[:space:]]*\[$VER\]" prestashop-module/CHANGELOG.md || {
+            echo "::error::prestashop-module/CHANGELOG.md n'a pas d'entrée '## [$VER]'.";
+            echo "::error::Mettre à jour le CHANGELOG AVANT de bumper la version.";
+            exit 1; }
+
+      - name: Exporter + pousser sur le dépôt public (SSH)
+        if: steps.gate.outputs.new == '1'
+        env:
+          DEPLOY_KEY: ${{ secrets.PUBLIC_DEPLOY_KEY }}
+          TAG: ${{ steps.v.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_KEY:-}" ]; then
+            echo "::warning::secret PUBLIC_DEPLOY_KEY absent — tag posé sur le lab, push public sauté."
+            exit 0
+          fi
+          # Clé de déploiement SSH (dédiée à fondouk-dev/fondouk)
+          mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/deploy_key"
+          ssh-keyscan -t ed25519,rsa github.com >> "$HOME/.ssh/known_hosts" 2>/dev/null
+          export GIT_SSH_COMMAND="ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts"
+
+          # Identité git globale : export-public.sh fait un commit interne
+          # (le runner CI n'en a aucune par défaut -> "empty ident name").
+          git config --global user.name  "fondouk-release-bot"
+          git config --global user.email "release@fondouk.dev"
+
+          bash build/export-public.sh "$RUNNER_TEMP/pub"
+          git clone --depth 1 "git@github.com:fondouk-dev/fondouk.git" "$RUNNER_TEMP/pubrepo"
+          rsync -a --delete --exclude '.git' "$RUNNER_TEMP/pub/" "$RUNNER_TEMP/pubrepo/"
+          cd "$RUNNER_TEMP/pubrepo"
+          git config user.name  "fondouk-release-bot"
+          git config user.email "release@fondouk.dev"
+          git add -A
+          git commit -m "release $TAG" || echo "aucun changement de fichiers à committer"
+          git tag "$TAG" || true
+          git push origin HEAD:main
+          git push origin "$TAG"
+          echo "::notice::Publié $TAG sur fondouk-dev/fondouk (déclenche le workflow Release)."
+
+      # Tag du lab EN DERNIER : si le push public échoue, le lab n'est pas tagué,
+      # donc un simple re-run reprend proprement (pas de version « coincée »).
+      - name: Taguer le lab
+        if: steps.gate.outputs.new == '1'
+        run: |
+          set -euo pipefail
+          git config user.name  "fondouk-release-bot"
+          git config user.email "release@fondouk.dev"
+          git tag "${{ steps.v.outputs.tag }}"
+          git push origin "${{ steps.v.outputs.tag }}"
