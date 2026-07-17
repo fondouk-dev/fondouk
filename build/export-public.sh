@@ -22,7 +22,7 @@ rm -rf "$OUT"; mkdir -p "$OUT/docs" "$OUT/build" "$OUT/docker"
 # ---------- Whitelist : copie ----------
 cp -r "$ROOT/capability-core" "$ROOT/prestashop-module" "$ROOT/scripts" "$ROOT/.github" "$OUT/"
 cp "$ROOT/README.md" "$ROOT/README.fr.md" "$ROOT/README.ar.md" "$ROOT/SECURITY.md" "$ROOT/LICENSE" "$ROOT/ARCHITECTURE.md" "$ROOT/.gitignore" "$OUT/"
-cp "$ROOT/build/package.sh" "$ROOT/build/_transform.py" "$ROOT/build/export-public.sh" "$OUT/build/"
+cp "$ROOT/build/package.sh" "$ROOT/build/_transform.py" "$ROOT/build/export-public.sh" "$ROOT/build/check-security.sh" "$OUT/build/"
 cp "$ROOT/docs/TECHNICAL-SPEC.md" "$ROOT/docs/GATE2-REPORT.md" "$ROOT/docs/demo-deployment.md" "$OUT/docs/"
 cp -r "$ROOT/docs/blueprint" "$OUT/docs/"
 # Environnement dev + démo (les harnais et le guide de démo en ont besoin)
