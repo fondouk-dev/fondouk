@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml/badge.svg)](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![prestashop](https://img.shields.io/badge/PrestaShop-8.2%20%7C%209.1-e2467d)
+![prestashop](https://img.shields.io/badge/PrestaShop-8.0--9.2-e2467d)
 ![ucp](https://img.shields.io/badge/UCP-2026--04--08-5b8def)
 ![status](https://img.shields.io/badge/read--only-strict-informational)
 
@@ -33,7 +33,7 @@ Il existe un module payant, **Fondouk Pro** (tableau de bord agent + contrôle p
 2. Dans le back-office PrestaShop : **Modules → Envoyer un module →** déposez le zip.
 3. C'est tout. Le manifest est en ligne à `https://votre-boutique/.well-known/ucp`.
 
-Prérequis : PrestaShop **8.2** ou **9.1**, URL simplifiées (réécriture d'URL) activées, HTTPS. L'écran du module affiche un diagnostic d'environnement (réécriture d'URL, HTTPS, conflits `.well-known`).
+Prérequis : PrestaShop **8.0** à **9.2**, URL simplifiées (réécriture d'URL) activées, HTTPS. L'écran du module affiche un diagnostic d'environnement (réécriture d'URL, HTTPS, conflits `.well-known`).
 
 ## Démarrage rapide — agent
 
@@ -88,8 +88,14 @@ Fondouk est aussi un **playbook copiable** pour rendre *n'importe quelle* platef
 ## Feuille de route
 
 - **v1 (maintenant) — gratuit, à vie :** manifest UCP + découverte Catalog (REST + MCP), `llms.txt`, lecture seule, PS 8/9. Rendre votre boutique *visible* pour les agents est l'identité du module — et ça reste gratuit.
-- **v2 — couche transactionnelle (Panier / Paiement, AP2) : partie de Fondouk Pro (payant).** Quand un agent passe de *lire* à *acheter*, la couche payante commence — on paie quand l'argent circule, pas pour être vu. Fondouk Pro (automne) l'associe à l'observabilité (tableau de bord, attribution), au contrôle par agent, et aux journaux d'audit / conformité.
+- **v2 — Fondouk Pro (payant), disponible maintenant :** un tableau de bord d'analytics agent — observabilité, contrôle par agent, journaux d'audit / conformité. Une couche transactionnelle (Panier / Paiement, AP2) est au backlog : quand un agent passe de *lire* à *acheter*, on paie quand l'argent circule, pas pour être vu.
 - **Portabilité :** `FondoukBundle` pour Sylius/Symfony (mode librairie) — deuxième implémentation de référence prouvant que le cœur se transpose.
+
+## Fondouk Pro
+
+Ce module (visibilité : manifest, catalogue, MCP) est gratuit et le restera. Fondouk Pro ajoute par-dessus un tableau de bord d'analytics agent : quels agents IA visitent votre boutique, quels produits ils consultent, le ratio d'adoption structuré-vs-vitrine, le contrôle par famille d'agent (autoriser / brider / bloquer, quotas), l'export CSV d'audit et l'outillage RGPD. Disponible sur la marketplace officielle PrestaShop Addons : https://addons.prestashop.com/en/analytics-stats-prestashop-modules/98377-fondouk-pro-ai-agent-analytics-for-your-store.html
+
+Le gratuit et le Pro coexistent sans risque : si les deux sont installés, le module gratuit se met automatiquement en veille pendant que le Pro assure le service ; désinstallez le Pro et le module gratuit reprend. Votre boutique n'est jamais réduite au silence, votre historique de télémétrie est conservé.
 
 ## Contribuer
 

@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml/badge.svg)](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![prestashop](https://img.shields.io/badge/PrestaShop-8.2%20%7C%209.1-e2467d)
+![prestashop](https://img.shields.io/badge/PrestaShop-8.0--9.2-e2467d)
 ![ucp](https://img.shields.io/badge/UCP-2026--04--08-5b8def)
 ![status](https://img.shields.io/badge/read--only-strict-informational)
 
@@ -33,7 +33,7 @@ There is a paid companion, **Fondouk Pro** (agent dashboard + per-agent control)
 2. In the PrestaShop back office: **Modules → Upload a module →** drop the zip.
 3. That's it. The manifest is live at `https://your-shop/.well-known/ucp`.
 
-Requirements: PrestaShop **8.2** or **9.1**, friendly URLs (SEO-friendly URLs) enabled, HTTPS. The module's screen shows an environment diagnostic (URL rewriting, HTTPS, `.well-known` conflicts).
+Requirements: PrestaShop **8.0** to **9.2**, friendly URLs (SEO-friendly URLs) enabled, HTTPS. The module's screen shows an environment diagnostic (URL rewriting, HTTPS, `.well-known` conflicts).
 
 ## Quick start — agent
 
@@ -88,8 +88,14 @@ Fondouk is also a **copyable playbook** for making *any* commerce platform reada
 ## Roadmap
 
 - **v1 (now) — free, forever:** UCP manifest + Catalog discovery (REST + MCP), `llms.txt`, read-only, PS 8/9. Making your store *visible* to agents is the module's identity — and it stays free.
-- **v2 — transactional layer (Cart / Checkout, AP2): part of Fondouk Pro (paid).** When an agent goes from *reading* to *buying*, the paid layer begins — you pay when money flows, not to be seen. Fondouk Pro (autumn) bundles it with observability (dashboard, attribution), per-agent control, and audit logs / compliance.
+- **v2 — Fondouk Pro (paid), available now:** an agent analytics dashboard — observability, per-agent control, audit logs / compliance. A transactional layer (Cart / Checkout, AP2) is backlog: when an agent goes from *reading* to *buying*, you pay when money flows, not to be seen.
 - **Portability:** `FondoukBundle` for Sylius/Symfony (library mode) — second reference implementation proving the core transposes.
+
+## Fondouk Pro
+
+This module (visibility: manifest, catalog, MCP) is free and will stay free. Fondouk Pro adds an agent analytics dashboard on top: which AI agents visit your store, which products they view, structured-vs-storefront adoption ratio, per-agent-family control (allow / throttle / block, quotas), CSV audit export and GDPR tooling. Available on the official PrestaShop Addons marketplace: https://addons.prestashop.com/en/analytics-stats-prestashop-modules/98377-fondouk-pro-ai-agent-analytics-for-your-store.html
+
+Free and Pro coexist safely: if both are installed, the free module automatically stands by while Pro serves; uninstall Pro and the free module resumes. Your store is never silenced, your telemetry history is kept.
 
 ## Contributing
 

@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml/badge.svg)](https://github.com/fondouk-dev/fondouk/actions/workflows/ci.yml)
 ![license](https://img.shields.io/badge/license-MIT-blue)
-![prestashop](https://img.shields.io/badge/PrestaShop-8.2%20%7C%209.1-e2467d)
+![prestashop](https://img.shields.io/badge/PrestaShop-8.0--9.2-e2467d)
 ![ucp](https://img.shields.io/badge/UCP-2026--04--08-5b8def)
 ![status](https://img.shields.io/badge/read--only-strict-informational)
 
@@ -33,7 +33,7 @@
 2. في لوحة تحكّم PrestaShop: **الوحدات ← رفع وحدة ←** أفلِت الملفّ.
 3. هذا كلّ شيء. الملفّ التعريفي متاح عند `https://your-shop/.well-known/ucp`.
 
-المتطلّبات: PrestaShop **8.2** أو **9.1**، الروابط الودّية (URL مُبسّطة) مُفعّلة، وHTTPS. تعرض شاشة الوحدة تشخيصًا للبيئة (إعادة كتابة الروابط، HTTPS، تعارضات `.well-known`).
+المتطلّبات: PrestaShop **8.0** إلى **9.2**، الروابط الودّية (URL مُبسّطة) مُفعّلة، وHTTPS. تعرض شاشة الوحدة تشخيصًا للبيئة (إعادة كتابة الروابط، HTTPS، تعارضات `.well-known`).
 
 ## بداية سريعة — الوكيل
 
@@ -88,8 +88,14 @@ curl -s -X POST https://demo.fondouk.dev/fondouk/ucp/mcp \
 ## خارطة الطريق
 
 - **v1 (الآن) — مجاني، إلى الأبد:** ملفّ UCP + اكتشاف الكتالوج (REST + MCP)، و`llms.txt`، للقراءة فقط، PS 8/9. جعل متجرك *مرئيًّا* للوكلاء هو هويّة الوحدة — ويبقى مجانيًّا.
-- **v2 — الطبقة المعامَلاتية (سلّة / دفع، AP2): جزء من Fondouk Pro (مدفوع).** حين ينتقل الوكيل من *القراءة* إلى *الشراء*، تبدأ الطبقة المدفوعة — تدفع حين يتحرّك المال، لا لتُرى. تجمعها Fondouk Pro (الخريف) مع المراقبة (لوحة، إسناد)، والتحكّم لكلّ وكيل، وسجلّات التدقيق / الامتثال.
+- **v2 — Fondouk Pro (مدفوع)، متاح الآن:** لوحة تحليلات للوكلاء — مراقبة، وتحكّم لكلّ وكيل، وسجلّات تدقيق / امتثال. الطبقة المعامَلاتية (سلّة / دفع، AP2) في قائمة الانتظار: حين ينتقل الوكيل من *القراءة* إلى *الشراء*، تدفع حين يتحرّك المال، لا لتُرى.
 - **قابلية النقل:** `FondoukBundle` لـ Sylius/Symfony (وضع المكتبة) — تنفيذ مرجعي ثانٍ يُثبت أنّ النواة قابلة للنقل.
+
+## Fondouk Pro
+
+هذه الوحدة (الرؤية: الملفّ التعريفي، الكتالوج، MCP) مجانية وستبقى مجانية. تضيف Fondouk Pro فوقها لوحة تحليلات للوكلاء: أيّ وكلاء الذكاء الاصطناعي يزورون متجرك، وأيّ المنتجات يشاهدون، ونسبة التبنّي المنظَّم مقابل الواجهة، والتحكّم حسب عائلة الوكيل (سماح / تقييد / حظر، حصص)، وتصدير CSV للتدقيق، وأدوات GDPR. متوفّرة على متجر PrestaShop Addons الرسمي: https://addons.prestashop.com/en/analytics-stats-prestashop-modules/98377-fondouk-pro-ai-agent-analytics-for-your-store.html
+
+المجاني وPro يتعايشان بأمان: إذا كان الاثنان مثبَّتين، تنتقل الوحدة المجانية تلقائيًّا إلى وضع الاستعداد بينما يخدم Pro؛ أزِل Pro وتستأنف الوحدة المجانية. لا يُكتَم صوت متجرك أبدًا، ويُحفَظ سِجلّ القياس عن بُعد لديك.
 
 ## المساهمة
 
