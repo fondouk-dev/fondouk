@@ -7,6 +7,12 @@ versionnage [SemVer](https://semver.org/lang/fr/).
 > **Règle projet** : avant toute nouvelle version, mettre à jour ce fichier
 > (nouveau numéro + changements) **puis** bumper `$this->version` dans `fondouk.php`.
 
+## [1.2.6] — 2026-07-19
+### Modifié
+- Documentation : README (EN/FR/AR) — section « Fondouk Pro » (open-core), badge et
+  prérequis de compatibilité **8.0 – 9.2**, feuille de route réalignée (Pro = analytics,
+  disponible ; checkout = backlog). Aucun changement fonctionnel du module.
+
 ## [1.2.5] — 2026-07-17
 ### Corrigé
 - **Cohabitation** : la désinstallation du gratuit ne détruit plus la table de
