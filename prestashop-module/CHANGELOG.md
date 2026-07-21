@@ -7,6 +7,15 @@ versionnage [SemVer](https://semver.org/lang/fr/).
 > **Règle projet** : avant toute nouvelle version, mettre à jour ce fichier
 > (nouveau numéro + changements) **puis** bumper `$this->version` dans `fondouk.php`.
 
+## [1.2.7] — 2026-07-21
+### Corrigé
+- Documentation : les PDF readme embarqués (EN/FR/AR) annonçaient encore la compatibilité
+  **8.2 / 9.1** → corrigés en **8.0 – 9.2** (badge + prérequis). Aucun changement fonctionnel.
+### Ajouté
+- `build/check-versions.sh` + `build/SUPPORTED-VERSIONS` (source de vérité MIN/MAX) : garde-fou
+  qui casse le build si une version PrestaShop périmée apparaît dans un artefact public
+  (README, module, PDF via `pdftotext`). Câblé dans `package.sh` et l'export public.
+
 ## [1.2.6] — 2026-07-19
 ### Modifié
 - Documentation : README (EN/FR/AR) — section « Fondouk Pro » (open-core), badge et

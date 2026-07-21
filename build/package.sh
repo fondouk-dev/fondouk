@@ -114,6 +114,9 @@ echo "  ✓ guard + en-tête licence sur chaque .php du module, .htaccess prése
 echo "--- sécurité (règles Addons : SQL/XSS/RCE/superglobales) ---"
 bash "$ROOT/build/check-security.sh" "$MOD" || { echo "ÉCHEC: règles de sécurité non respectées (voir docs/SECURITY-RULES.md)"; exit 1; }
 
+echo "--- versions (plage Addons déclarée, PDF inclus) ---"
+bash "$ROOT/build/check-versions.sh" "$ROOT" || { echo "ÉCHEC: version PrestaShop périmée dans les artefacts"; exit 1; }
+
 # 8. Lint de tous les .php du zip (conteneur)
 docker run --rm -v "$STAGE":/stage --entrypoint bash "$IMG" -lc '
   err=0; for f in $(find /stage/'"$LOWER"' -name "*.php"); do php -l "$f" >/dev/null || { echo "LINT FAIL $f"; err=1; }; done
