@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.2.6';
+        $this->version = '1.3.0';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -65,6 +65,7 @@ class Fondouk extends Module
         return $this->uninstallDb()
             && Configuration::deleteByName('FONDOUK_IP_SALT')
             && Configuration::deleteByName('FONDOUK_CATALOG_VERSION')
+            && Configuration::deleteByName('FONDOUK_LAST_PURGE')
             && parent::uninstall();
     }
 

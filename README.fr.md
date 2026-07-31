@@ -81,6 +81,8 @@ Les prix sont calculés en **contexte visiteur anonyme** (`getPriceStatic` avec 
 
 Durcissement : rate limiting token-bucket (60/min, burst 120) + `Retry-After`, cache de réponses invalidé par les hooks produit, plafonds de taille de requête et de batch, télémétrie locale (IP hachée, jamais stockée en clair).
 
+**Rétention des données (RGPD).** Les lignes de télémétrie sont purgées **automatiquement au-delà de 90 jours** — sans cron : la purge s'exécute sur le chemin d'écriture, au plus une fois par jour, par petits lots avec un budget borné par requête (jamais une requête agent ne paie un gros arriéré d'un coup). Ajustez la fenêtre via la valeur de configuration `FONDOUK_RETENTION_DAYS` (usage avancé ; le module gratuit n'a pas d'écran de réglage). Quand Fondouk Pro est actif, c'est lui qui gère la rétention (réglable dans son écran Conformité).
+
 ## Le Blueprint
 
 Fondouk est aussi un **playbook copiable** pour rendre *n'importe quelle* plateforme de commerce lisible par les agents — le module PrestaShop est l'implémentation de référence n°1. Voir [`ARCHITECTURE.md`](ARCHITECTURE.md) et [`docs/blueprint/`](docs/blueprint/) : le schéma du Capability Graph, le contrat d'adapter, le pattern de découverte, et les modes de déploiement (embarqué / librairie / proxy). Le Blueprint est un **playbook d'implémentation des standards existants (UCP, MCP)** — jamais une spec concurrente.

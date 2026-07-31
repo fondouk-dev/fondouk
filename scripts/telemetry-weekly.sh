@@ -103,6 +103,17 @@ echo "| Cette période | **$TOTAL** |"
 echo "| Période précédente | $PREV |"
 echo "| Delta | ${SIGN}${DELTA} ($PCT) |"
 echo
+META="$(q "SELECT COUNT(*) FROM ps_fondouk_access_log WHERE $W AND user_agent LIKE '%meta-external%';")"; META="${META:-0}"
+echo "## Suivi crawl Meta (robots.txt Crawl-delay depuis 2026-07-30)"
+echo
+echo "| meta-externalagent | valeur |"
+echo "|---|---|"
+echo "| accès cette période | $META |"
+echo "| ≈ accès / jour | $(awk -v m=$META 'BEGIN{printf "%.0f", m/7}') |"
+echo "| part du total | $(awk -v m=$META -v t=$TOTAL 'BEGIN{print (t>0)?sprintf("%.1f%%",100*m/t):"n/a"}') |"
+echo
+echo "> \`Crawl-delay: 10\` posé le 2026-07-30 (~8 600/jour visé). Suivre la décrue — cf. \votre archive de preuves. (Crawl-delay non-standard : Meta peut ne pas l'honorer.)"
+echo
 echo "## Familles d'agents"
 echo
 echo "| Famille | Accès | % |"
