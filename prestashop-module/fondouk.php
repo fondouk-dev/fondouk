@@ -25,7 +25,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.3.0';
+        $this->version = '1.3.1';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];

@@ -28,6 +28,7 @@ use Fondouk\CapabilityCore\Query\LookupQuery;
 use Fondouk\CapabilityCore\Query\Pagination;
 use Fondouk\CapabilityCore\Query\SearchQuery;
 use PrestaShop\Module\Fondouk\PrestaShop\AccessLogger;
+use PrestaShop\Module\Fondouk\PrestaShop\AnonymousContext;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopCatalogSource;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopShopProfileSource;
 use PrestaShop\Module\Fondouk\PrestaShop\RateLimiter;
@@ -137,8 +138,14 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
 
         // --- 3. Cache (invalidé par version bumpée par les hooks) ---
         $cache = new ResponseCache();
+        // `pv` : visibilité des prix pour un visiteur. Si le marchand masque ses prix, les
+        // réponses mises en cache avant ce choix ne sont plus jamais servies.
+        // `a` : réponses calculées pour un visiteur anonyme (AnonymousContext) ; les entrées
+        // antérieures, qui ont pu dépendre du client connecté, ne sont plus jamais servies.
         $cacheKey = $cache->key($action, [
             'l' => $locale->idLang, 'c' => $locale->idCurrency, 'co' => $locale->idCountry, 's' => (int) $this->context->shop->id,
+            'pv' => PrestaShopCatalogSource::pricesVisibleToVisitors() ? 1 : 0,
+            'a' => AnonymousContext::CACHE_MARKER,
         ], md5((string) json_encode($body)));
 
         $cached = $cache->get($cacheKey);
@@ -155,6 +162,9 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
             strtoupper((string) (new Currency($locale->idCurrency))->iso_code)
         );
         [$response, $capability, $count] = $this->dispatch($action, $body, $source, $mapper);
+        if ($source->pricesHidden()) {
+            $response = UcpCatalogMapper::withPricesHiddenNotice($response);
+        }
 
         $json = (string) json_encode($response, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
         $cache->set($cacheKey, $json);

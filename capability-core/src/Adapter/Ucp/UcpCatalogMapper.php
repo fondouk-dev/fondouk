@@ -106,6 +106,31 @@ final class UcpCatalogMapper
         ];
     }
 
+    /**
+     * Ajoute à une réponse catalogue le message d'information « prix masqués » : la
+     * boutique ne montre pas ses prix aux visiteurs anonymes, aucun produit n'est donc
+     * servi (UCP exige un prix). L'agent sait pourquoi la réponse est vide, et aucune page
+     * suivante ne lui est annoncée (elle serait vide elle aussi).
+     *
+     * @param array<string,mixed> $response
+     *
+     * @return array<string,mixed>
+     */
+    public static function withPricesHiddenNotice(array $response): array
+    {
+        if (isset($response['pagination'])) {
+            $response['pagination'] = ['has_next_page' => false];
+        }
+        $response['messages'] = $response['messages'] ?? [];
+        $response['messages'][] = [
+            'type' => 'info',
+            'code' => 'prices_hidden',
+            'content' => 'This merchant does not display prices to anonymous visitors, so its products are not exposed to agents. Visit the store for details.',
+        ];
+
+        return $response;
+    }
+
     // ------------------------------------------------------------------ interne
 
     /** @return list<array<string,mixed>> */

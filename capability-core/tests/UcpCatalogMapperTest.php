@@ -144,6 +144,62 @@ final class UcpCatalogMapperTest extends TestCase
         self::assertSame('gid://boutique.example/1/product/21', $response['product']['id']);
     }
 
+    /** Boutique qui masque tous ses prix : graphe de produits publics sans aucun prix. */
+    private function pricesHiddenGraph(string $subsetKind): CapabilityGraph
+    {
+        $products = [];
+        foreach ([500, 501] as $id) {
+            $products[] = new Product(
+                id: "gid://boutique.example/1/product/$id",
+                title: ['fr' => "Prix masqué $id"],
+                public: true,
+                variants: [new Variant("gid://boutique.example/1/variant/$id-0", [], new Availability(true, Availability::IN_STOCK, 7))],
+                description: ['fr' => 'Prix masqué.'],
+            );
+        }
+
+        return new CapabilityGraph(
+            shop: new Shop('1', 'https://boutique.example', 'fr', 'EUR', ['fr'], ['EUR'], gidBase: 'boutique.example'),
+            generatedAt: '2026-10-20T12:00:00+00:00',
+            products: $products,
+            subset: new Subset($subsetKind, 'eyJwIjoxfQ==', true, 30),
+        );
+    }
+
+    /** F-PRIX-1 : prix masqués → aucun produit, aucun prix (ni nul ni fictif), message, pas de page suivante. */
+    public function testPricesHiddenSearchServesNoProductAndExplainsWhy(): void
+    {
+        $mapper = new UcpCatalogMapper('fr', 'EUR');
+        $response = UcpCatalogMapper::withPricesHiddenNotice($mapper->searchResponse($this->pricesHiddenGraph(Subset::SEARCH)));
+
+        $this->validateUcp($response, 'https://ucp.dev/schemas/shopping/catalog_search.json#/$defs/search_response');
+
+        self::assertSame([], $response['products']);
+        self::assertSame(['has_next_page' => false], $response['pagination'], 'Aucune page suivante annoncée.');
+        self::assertSame('info', $response['messages'][0]['type']);
+        self::assertSame('prices_hidden', $response['messages'][0]['code']);
+        $json = (string) json_encode($response);
+        self::assertStringNotContainsString('"amount"', $json, 'Aucun montant, ni nul ni fictif.');
+        self::assertStringNotContainsString('"quantity"', $json);
+    }
+
+    public function testPricesHiddenLookupAndGetProductValidate(): void
+    {
+        $mapper = new UcpCatalogMapper('fr', 'EUR');
+
+        $lookup = UcpCatalogMapper::withPricesHiddenNotice($mapper->lookupResponse($this->pricesHiddenGraph(Subset::LOOKUP)));
+        $this->validateUcp($lookup, 'https://ucp.dev/schemas/shopping/catalog_lookup.json#/$defs/lookup_response');
+        self::assertSame([], $lookup['products']);
+        self::assertSame('prices_hidden', $lookup['messages'][0]['code']);
+
+        $product = UcpCatalogMapper::withPricesHiddenNotice($mapper->getProductResponse($this->pricesHiddenGraph(Subset::PRODUCT)));
+        // Produit introuvable : enveloppe d'erreur UCP (error_response), complétée du message d'information.
+        $this->validateUcp($product, 'https://ucp.dev/schemas/shopping/types/error_response.json');
+        self::assertSame('not_found', $product['messages'][0]['code']);
+        self::assertSame('prices_hidden', $product['messages'][1]['code']);
+        self::assertArrayNotHasKey('product', $product);
+    }
+
     public function testGetProductNotFoundReturnsErrorEnvelope(): void
     {
         $mapper = new UcpCatalogMapper('fr', 'EUR');

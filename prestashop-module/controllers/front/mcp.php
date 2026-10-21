@@ -244,10 +244,14 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
                     return $this->toolError($id, $this->module->l('Missing "id" parameter. Provide a product identifier obtained via search_catalog.'));
                 }
                 $graph = $source->getProduct(new GetProductQuery($pid));
-                if ($graph === null) {
+                // Produit introuvable, ou exclu par l'adapter (prix masqué) : erreur d'outil.
+                $ucp = $graph !== null ? $mapper->getProductResponse($graph) : [];
+                if (!isset($ucp['product']) && $source->pricesHidden()) {
+                    return $this->toolError($id, $this->module->l('This merchant does not display prices to anonymous visitors, so its products are not exposed to agents.'));
+                }
+                if (!isset($ucp['product'])) {
                     return $this->toolError($id, sprintf($this->module->l('No public product matches the identifier "%s". Use search_catalog to find products, then retry with a returned identifier.'), $pid));
                 }
-                $ucp = $mapper->getProductResponse($graph);
                 $text = sprintf($this->module->l('Product: %s'), $ucp['product']['title'] ?? $pid);
                 $cap = UcpCatalogMapper::CAP_LOOKUP;
                 $count = 1;
@@ -255,6 +259,11 @@ class FondoukMcpModuleFrontController extends ModuleFrontController
 
             default:
                 return $this->error($id, -32602, sprintf($this->module->l('Unknown tool: "%s". Available tools: search_catalog, get_product, lookup_catalog.'), $name));
+        }
+
+        if ($source->pricesHidden()) {
+            $ucp = UcpCatalogMapper::withPricesHiddenNotice($ucp);
+            $text = $this->module->l('This merchant does not display prices to anonymous visitors, so its products are not exposed to agents.');
         }
 
         AccessLogger::log($this->context, 'mcp', $cap, 200, $count, (int) round((microtime(true) - $start) * 1000), $locale->idLang, $locale->idCurrency);

@@ -38,6 +38,12 @@ use Fondouk\CapabilityCore\Query\SearchQuery;
  * qu'un visiteur anonyme verrait sont exposés — actifs, visibles, et accessibles au
  * groupe visiteur (PS_UNIDENTIFIED_GROUP). Les prix spécifiques réservés à un groupe
  * (B2B) ne s'appliquent jamais. Aucune quantité brute, aucune donnée client.
+ *
+ * PRIX MASQUÉS (TECHNICAL-SPEC, décision Q2) : si la vitrine ne montre pas le prix à un
+ * visiteur anonyme (groupe visiteur sans affichage des prix, mode catalogue sans prix,
+ * produit à show_price = 0), le produit reste public dans le graphe mais ses variants
+ * n'ont aucun prix ; l'adapter UCP l'exclut, car UCP exige un prix. Jamais de prix nul
+ * ou fictif à la place d'un prix masqué.
  */
 final class PrestaShopCatalogSource implements CatalogSource
 {
@@ -52,9 +58,13 @@ final class PrestaShopCatalogSource implements CatalogSource
     private int $precision;
     private string $gidBase;
     private string $baseUrl;
+    private bool $pricesVisible;
 
     public function __construct(private readonly \Context $context, SearchLocale $locale)
     {
+        // Jamais le client connecté (cookie) : groupe, panier et adresse sont ceux d'un visiteur anonyme.
+        AnonymousContext::apply($this->context);
+
         $shop = $this->context->shop;
         $this->idShop = (int) $shop->id;
         $this->baseUrl = rtrim((string) $shop->getBaseURL(true, true), '/');
@@ -69,6 +79,7 @@ final class PrestaShopCatalogSource implements CatalogSource
         $this->precision = (int) $currency->precision;
         $this->countryIso = strtoupper((string) \Country::getIsoById($this->idCountry));
         $this->visitorGroup = (int) \Configuration::get('PS_UNIDENTIFIED_GROUP');
+        $this->pricesVisible = self::pricesVisibleToVisitors();
 
         // Contexte de présentation (devise/langue/pays fiscal) pour un calcul de prix cohérent.
         $this->context->currency = $currency;
@@ -175,6 +186,31 @@ final class PrestaShopCatalogSource implements CatalogSource
             )';
     }
 
+    /**
+     * La vitrine montre-t-elle les prix à un visiteur anonyme de la boutique courante ?
+     * Même règle que PrestaShop (ProductPresentationSettings::shouldShowPrice) : groupe
+     * visiteur autorisé à voir les prix, et mode catalogue inactif ou « avec prix ».
+     * La part propre à chaque produit (product_shop.show_price) est dans buildVariant().
+     */
+    public static function pricesVisibleToVisitors(): bool
+    {
+        if (\Group::isFeatureActive()) {
+            $visitor = new \Group((int) \Configuration::get('PS_UNIDENTIFIED_GROUP'));
+            if (!(bool) $visitor->show_prices) {
+                return false;
+            }
+        }
+
+        return !(bool) \Configuration::get('PS_CATALOG_MODE')
+            || (bool) \Configuration::get('PS_CATALOG_MODE_WITH_PRICES');
+    }
+
+    /** Vrai si la boutique masque tous ses prix : l'adapter UCP ne servira aucun produit. */
+    public function pricesHidden(): bool
+    {
+        return !$this->pricesVisible;
+    }
+
     private function isPublic(int $idProduct): bool
     {
         $sql = 'SELECT COUNT(*)
@@ -252,8 +288,10 @@ final class PrestaShopCatalogSource implements CatalogSource
     {
         $idProduct = (int) $product->id;
 
-        $price = $this->anonymousPrice($idProduct, $ipa, true);
-        $regular = $this->anonymousPrice($idProduct, $ipa, false);
+        // Prix masqué au visiteur (boutique ou produit) : variant sans prix (TECHNICAL-SPEC Q2).
+        $shown = $this->pricesVisible && (bool) $product->show_price;
+        $price = $shown ? $this->anonymousPrice($idProduct, $ipa, true) : null;
+        $regular = $shown ? $this->anonymousPrice($idProduct, $ipa, false) : null;
         $prices = [];
         if ($price !== null) {
             $list = ($regular !== null && $regular->amountMinor > $price->amountMinor) ? $regular : null;

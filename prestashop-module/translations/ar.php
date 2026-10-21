@@ -30,6 +30,7 @@ $_MODULE['<{fondouk}prestashop>fondouk_308a087e3a652fd94d82a7bc1a267517'] = 'ن�
 $_MODULE['<{fondouk}prestashop>fondouk_9ff7d5d8633cca70ceb282dce77e6edf'] = 'اللغات:';
 $_MODULE['<{fondouk}prestashop>fondouk_3775d3e917af0f63574048fc4fad3be9'] = 'يجعل المتجر مرئيًا وقابلًا للاستعلام من قِبل وكلاء الذكاء الاصطناعي (UCP، MCP) — للقراءة فقط، دون أي إعداد.';
 $_MODULE['<{fondouk}prestashop>fondouk_61c6c4cfcd8c52868a7d9826a759b677'] = 'المعامل "id" مفقود. قدّم معرّف منتج مُحصَّلًا عليه عبر search_catalog.';
+$_MODULE['<{fondouk}prestashop>fondouk_e3b7ed9588fe26466ac6b31822e0052d'] = 'لا يعرض هذا التاجر أسعاره للزوار المجهولين، لذلك لا تُعرض منتجاته للوكلاء.';
 $_MODULE['<{fondouk}prestashop>diagnostic_87edebc32eece4c2be95207e15658772'] = 'الوحدة [1]قيد التشغيل[/1]: يتم تقديم ملف تعريف UCP وواجهة برمجة تطبيقات الكتالوج REST وخادم MCP. للقراءة فقط، دون أي إعداد — لا شيء لضبطه هنا.';
 $_MODULE['<{fondouk}prestashop>fondouk_7a868ee34326b0da1c0744ef50697a5c'] = 'لا يوجد منتج عام يطابق المعرّف "%s". استخدم search_catalog للعثور على المنتجات، ثم أعد المحاولة بمعرّف مُرجَع.';
 $_MODULE['<{fondouk}prestashop>fondouk_7ecac4794e2883f50b1805a857cabc42'] = 'أقلمة اختيارية: اللغة (BCP 47)، العملة (ISO 4217)، address_country (ISO 3166-1 alpha-2).';

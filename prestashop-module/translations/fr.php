@@ -30,6 +30,7 @@ $_MODULE['<{fondouk}prestashop>fondouk_308a087e3a652fd94d82a7bc1a267517'] = 'Tex
 $_MODULE['<{fondouk}prestashop>fondouk_9ff7d5d8633cca70ceb282dce77e6edf'] = 'Langues :';
 $_MODULE['<{fondouk}prestashop>fondouk_3775d3e917af0f63574048fc4fad3be9'] = 'Rend la boutique visible et interrogeable par les agents IA (UCP, MCP) — lecture seule, aucune configuration.';
 $_MODULE['<{fondouk}prestashop>fondouk_61c6c4cfcd8c52868a7d9826a759b677'] = 'Paramètre "id" manquant. Fournissez un identifiant de produit obtenu via search_catalog.';
+$_MODULE['<{fondouk}prestashop>fondouk_e3b7ed9588fe26466ac6b31822e0052d'] = 'Ce marchand n\'affiche pas ses prix aux visiteurs anonymes : ses produits ne sont donc pas exposés aux agents.';
 $_MODULE['<{fondouk}prestashop>diagnostic_87edebc32eece4c2be95207e15658772'] = 'Module [1]opérationnel[/1] : le manifeste UCP, l\'API catalogue REST et le serveur MCP sont servis. Lecture seule, aucune configuration — rien à régler ici.';
 $_MODULE['<{fondouk}prestashop>fondouk_7a868ee34326b0da1c0744ef50697a5c'] = 'Aucun produit public ne correspond à l\'identifiant "%s". Utilisez search_catalog pour trouver des produits, puis réessayez avec un identifiant renvoyé.';
 $_MODULE['<{fondouk}prestashop>fondouk_7ecac4794e2883f50b1805a857cabc42'] = 'Localisation facultative : langue (BCP 47), devise (ISO 4217), address_country (ISO 3166-1 alpha-2).';

@@ -7,6 +7,26 @@ versioning follows [SemVer](https://semver.org/).
 > **Project rule:** before any new release, update this file (new number +
 > changes) **then** bump `$this->version` in `fondouk.php`.
 
+## [1.3.1] — 2026-10-21
+Security release on top of 1.3.0 (no other change).
+
+### Security
+- **Agent catalog always computed for an anonymous visitor.** Prices served by the UCP REST and MCP
+  endpoints could depend on the session of the requester (customer group, customer-specific prices,
+  cart address) instead of always being those of an anonymous visitor. They are now computed for an
+  anonymous visitor in every case; shop, language, currency and country requested by the agent are
+  unchanged, and cached responses from earlier versions are never served.
+- **Prices the shop hides from visitors were exposed to agents.** When a shop does not show
+  prices to anonymous visitors — catalog mode without prices, a visitor group that cannot see
+  prices, or a product whose price is hidden (`show_price` off) — the storefront hid them but
+  the UCP REST and MCP endpoints still returned them. Fondouk now applies the same rule as
+  the PrestaShop storefront: a product whose price is hidden has no price in the catalog
+  graph and is not served to agents (UCP requires a price; no zero or placeholder price is
+  ever exposed instead). When the whole shop hides its prices, `search` and `lookup`
+  responses carry an `info` message with code `prices_hidden` and announce no next page;
+  cached responses from before the change are never served (the price visibility is part of
+  the cache key). Present since the first release.
+
 ## [1.3.0] — 2026-07-31
 ### Added
 - **Automatic telemetry retention (90 days, batched purge).** The
