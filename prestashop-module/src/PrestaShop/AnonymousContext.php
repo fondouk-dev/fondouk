@@ -26,16 +26,17 @@ final class AnonymousContext
     /** Marqueur de clé de cache : les réponses calculées avant cette neutralisation ne sont plus servies. */
     public const CACHE_MARKER = 'anon1';
 
+    /**
+     * Le contexte reçu est celui du contrôleur ($this->context), c'est-à-dire le contexte de la
+     * requête que PrestaShop consulte pour le groupe tarifaire et l'adresse fiscale.
+     */
     public static function apply(\Context $context): void
     {
-        $global = \Context::getContext();
-        foreach ($context === $global ? [$context] : [$context, $global] as $ctx) {
-            // Toujours des objets neufs, même pour un visiteur : un client non enregistré peut porter
-            // des attributs posés par un module tiers (géolocalisation : geoloc_id_country, postcode)
-            // que PrestaShop utilise pour l'adresse fiscale.
-            $ctx->customer = new \Customer();
-            // Panier vierge, jamais enregistré : aucune adresse, aucun client, aucune quantité.
-            $ctx->cart = new \Cart();
-        }
+        // Toujours des objets neufs, même pour un visiteur : un client non enregistré peut porter
+        // des attributs posés par un module tiers (géolocalisation : geoloc_id_country, postcode)
+        // que PrestaShop utilise pour l'adresse fiscale.
+        $context->customer = new \Customer();
+        // Panier vierge, jamais enregistré : aucune adresse, aucun client, aucune quantité.
+        $context->cart = new \Cart();
     }
 }

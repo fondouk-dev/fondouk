@@ -7,6 +7,14 @@ versioning follows [SemVer](https://semver.org/).
 > **Project rule:** before any new release, update this file (new number +
 > changes) **then** bump `$this->version` in `fondouk.php`.
 
+## [1.3.2] — 2026-10-21
+Maintenance release on top of 1.3.1 (no functional change).
+
+### Changed
+- **No use of the legacy global context accessor.** The anonymous-visitor protection introduced in 1.3.1
+  now works only on the controller context it receives, without calling `Context::getContext()`
+  (flagged by the PrestaShop Addons validator for PrestaShop 9). Behaviour is unchanged.
+
 ## [1.3.1] — 2026-10-21
 Security release on top of 1.3.0 (no other change).
 
