@@ -364,6 +364,12 @@ final class PrestaShopCatalogSource implements CatalogSource
 
     private function availability(int $idProduct, int $qty): Availability
     {
+        // Gestion des stocks désactivée : la vitrine vend le produit quelle que soit la quantité
+        // enregistrée (F-STOCK-1). La quantité, non suivie, n'est pas annoncée.
+        if (!(bool) \Configuration::get('PS_STOCK_MANAGEMENT')) {
+            return new Availability(true, Availability::IN_STOCK, null);
+        }
+
         $oos = (int) \StockAvailable::outOfStock($idProduct);
         $allowOos = ($oos === 1) || ($oos === 2 && (bool) \Configuration::get('PS_ORDER_OUT_OF_STOCK'));
         $available = $qty > 0 || $allowOos;

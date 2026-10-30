@@ -21,9 +21,20 @@ if (!defined('_PS_VERSION_')) {
  * soutenu. Atomique par transaction + verrou de ligne. Clé = IP hashée+salée.
  *
  * Fail-open : une erreur du limiteur ne doit jamais casser le service (lecture seule).
+ * La clé est l'adresse donnée par ClientIp (en-têtes de proxy seulement derrière un proxy déclaré).
+ * Purge bornée (R3-03) : un compteur inactif depuis IDLE_PURGE_S est plein (le seau se remplit
+ * en burst / débit secondes) ; le supprimer ne change aucune décision. Une requête sur
+ * PURGE_ONE_IN supprime au plus PURGE_BATCH compteurs inactifs : la table reste bornée.
  */
 final class RateLimiter
 {
+    private const IDLE_PURGE_S = 600;
+    private const PURGE_ONE_IN = 100;
+    private const PURGE_BATCH = 500;
+
+    /** F-02 : une consultation par identifiants coûte 1 jeton par tranche de 10 identifiants. */
+    public const IDS_PER_TOKEN = 10;
+
     private readonly float $ratePerSecond;
 
     public function __construct(int $perMinute = 60, private readonly int $burst = 120)
@@ -31,11 +42,30 @@ final class RateLimiter
         $this->ratePerSecond = $perMinute / 60.0;
     }
 
+    /** Coût en jetons d'une consultation portant sur `$ids` identifiants (au moins 1). */
+    public static function costForIds(int $ids): int
+    {
+        return max(1, (int) ceil($ids / self::IDS_PER_TOKEN));
+    }
+
     /**
+     * Coût effectivement facturé : au moins 1 jeton, au plus la rafale. Un coût supérieur à la
+     * rafale exige alors un seau plein, jamais l'impossible (agent bridé à faible débit).
+     */
+    public function cappedCost(int $cost): int
+    {
+        return max(1, min($cost, $this->burst));
+    }
+
+    /**
+     * Consomme `$cost` jetons (F-02 : coût proportionnel au travail demandé), ramené par
+     * {@see cappedCost()}.
+     *
      * @return array{allowed:bool,retryAfter:int,remaining:int}
      */
-    public function hit(string $ip): array
+    public function hit(string $ip, int $cost = 1): array
     {
+        $cost = (float) $this->cappedCost($cost);
         $now = microtime(true);
         $salt = (string) \Configuration::get('FONDOUK_IP_SALT');
         $bucket = hash('sha256', $ip . '|' . $salt);
@@ -56,9 +86,9 @@ final class RateLimiter
                 $tokens = (float) $this->burst;
             }
 
-            $allowed = $tokens >= 1.0;
+            $allowed = $tokens >= $cost;
             if ($allowed) {
-                $tokens -= 1.0;
+                $tokens -= $cost;
             }
 
             $tokensSql = sprintf('%.6f', $tokens);
@@ -67,6 +97,9 @@ final class RateLimiter
                  ON DUPLICATE KEY UPDATE tokens = ' . $tokensSql . ', updated_at = ' . $nowSql
             );
             $db->execute('COMMIT');
+            if (random_int(1, self::PURGE_ONE_IN) === 1) {
+                $db->execute('DELETE FROM `' . $t . '` WHERE updated_at < ' . sprintf('%.6f', $now - self::IDLE_PURGE_S) . ' LIMIT ' . self::PURGE_BATCH);
+            }
         } catch (\Throwable $e) {
             try {
                 $db->execute('ROLLBACK');
@@ -85,7 +118,7 @@ final class RateLimiter
             return ['allowed' => true, 'retryAfter' => 0, 'remaining' => $this->burst];
         }
 
-        $retryAfter = $allowed ? 0 : max(1, (int) ceil((1.0 - $tokens) / $this->ratePerSecond));
+        $retryAfter = $allowed ? 0 : max(1, (int) ceil(($cost - $tokens) / $this->ratePerSecond));
 
         return [
             'allowed' => $allowed,

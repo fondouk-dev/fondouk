@@ -29,6 +29,7 @@ use Fondouk\CapabilityCore\Query\Pagination;
 use Fondouk\CapabilityCore\Query\SearchQuery;
 use PrestaShop\Module\Fondouk\PrestaShop\AccessLogger;
 use PrestaShop\Module\Fondouk\PrestaShop\AnonymousContext;
+use PrestaShop\Module\Fondouk\PrestaShop\ClientIp;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopCatalogSource;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopShopProfileSource;
 use PrestaShop\Module\Fondouk\PrestaShop\RateLimiter;
@@ -44,6 +45,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
     private const MAX_LOOKUP_IDS = 100;
     private const RATE_LIMIT_PER_MIN = 60;
     private const RATE_LIMIT_BURST = 120;
+    private const ALLOWED_METHODS = 'GET, HEAD, POST, OPTIONS';
 
     public function canonicalRedirection($canonicalURL = '')
     {
@@ -56,6 +58,7 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
 
     public function initContent()
     {
+        RequestGuard::closeIfStandby($this->module);
         $start = microtime(true);
         // Action from the route param; on the bare /fondouk/ucp entry (what agentic browsers
         // probe) derive it from the `capability` query param. Default: search.
@@ -64,17 +67,34 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
             $action = $this->actionFromCapability((string) Tools::getValue('capability', ''));
         }
 
+        // --- 0. Méthode : pré-vol CORS (agents dans un navigateur), puis méthodes du contrat.
+        // POST = transport UCP canonique ; GET (et HEAD) = passerelle non normative ; le reste → 405.
+        $method = RequestGuard::method();
+        if ($method === 'OPTIONS') {
+            RequestGuard::sendPreflight(self::ALLOWED_METHODS);
+        }
+
         // --- 1. Rate limiting (erreur transport 429) ---
-        $rl = (new RateLimiter(self::RATE_LIMIT_PER_MIN, self::RATE_LIMIT_BURST))->hit((string) Tools::getRemoteAddr());
+        $limiter = new RateLimiter(self::RATE_LIMIT_PER_MIN, self::RATE_LIMIT_BURST);
+        $clientIp = ClientIp::forRateLimit();
+        $rl = $limiter->hit($clientIp);
         if (!$rl['allowed']) {
             header('Retry-After: ' . $rl['retryAfter']);
             $this->respond(429, ['code' => 'rate_limited', 'content' => 'Too many requests.'], $action, null, $start, null, $rl);
         }
 
+        if (!in_array($method, ['GET', 'HEAD', 'POST'], true)) {
+            header('Allow: ' . self::ALLOWED_METHODS);
+            $this->respond(405, ['code' => 'method_not_allowed', 'content' => 'Method not allowed. Use POST (canonical UCP transport) or GET.'], $action, null, $start, null, $rl);
+        }
+
         // Garde de taille de corps (Gate 2 F2a).
-        [$tooLarge, $body] = RequestGuard::jsonBody();
+        [$tooLarge, $body, $invalidJson] = RequestGuard::jsonBody();
         if ($tooLarge) {
             $this->respond(413, ['code' => 'request_too_large', 'content' => 'Request body too large (max 256 KiB).'], $action, null, $start, null, $rl);
+        }
+        if ($invalidJson) {
+            $this->respond(400, ['code' => 'invalid_request', 'content' => 'Request body is not a valid JSON object.'], $action, null, $start, null, $rl);
         }
         if (!is_array($body)) {
             $body = [];
@@ -129,6 +149,24 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
                 $this->respond(400, ['code' => 'request_too_large', 'content' => 'Batch exceeds ' . self::MAX_LOOKUP_IDS . ' identifiers.'], $action, null, $start, null, $rl);
             }
         }
+        // F-02 : coût proportionnel au nombre de produits que la requête fera construire, 1 jeton
+        // par tranche de 10 : identifiants d'une consultation, taille de page d'une recherche. Le
+        // jeton d'admission est déjà pris ; coût total borné à la rafale. Même aiguillage que
+        // dispatch() : toute action autre que lookup et product est exécutée comme une recherche.
+        $pg = is_array($body['pagination'] ?? null) ? $body['pagination'] : [];
+        $work = match ($action) {
+            'lookup' => count((array) ($body['ids'] ?? [])),
+            'product' => 1,
+            default => (new Pagination((int) ($pg['limit'] ?? Pagination::DEFAULT_LIMIT)))->clampedLimit(),
+        };
+        $extra = $limiter->cappedCost(RateLimiter::costForIds($work)) - 1;
+        if ($extra > 0) {
+            $rl = $limiter->hit($clientIp, $extra);
+            if (!$rl['allowed']) {
+                header('Retry-After: ' . $rl['retryAfter']);
+                $this->respond(429, ['code' => 'rate_limited', 'content' => 'Too many requests: each request costs one rate-limit token per 10 products it asks for (lookup identifiers, search page size). Retry later or ask for fewer products.'], $action, null, $start, null, $rl);
+            }
+        }
 
         $langIso = (string) ($ctx['language'] ?? '');
         if ($langIso === '') {
@@ -146,6 +184,10 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
             'l' => $locale->idLang, 'c' => $locale->idCurrency, 'co' => $locale->idCountry, 's' => (int) $this->context->shop->id,
             'pv' => PrestaShopCatalogSource::pricesVisibleToVisitors() ? 1 : 0,
             'a' => AnonymousContext::CACHE_MARKER,
+            // `sc` : les URL et identifiants servis dépendent du schéma de la requête (http/https) ;
+            // `sm` : la disponibilité dépend de la gestion des stocks (réglage sans hook).
+            'sc' => Tools::usingSecureMode() ? 1 : 0,
+            'sm' => (int) Configuration::get('PS_STOCK_MANAGEMENT'),
         ], md5((string) json_encode($body)));
 
         $cached = $cache->get($cacheKey);
@@ -178,7 +220,11 @@ class FondoukCatalogModuleFrontController extends ModuleFrontController
     private function emit(string $json, string $cacheState, array $rl): void
     {
         header('Content-Type: application/json; charset=utf-8');
-        header('Cache-Control: public, max-age=60');
+        // Aucune mise en cache HTTP externe (navigateur, proxy, CDN) : un prix ou un produit que la
+        // boutique vient de restreindre ne doit jamais être resservi par un intermédiaire. Le cache
+        // interne du module, invalidé par les hooks, reste seul juge de la fraîcheur.
+        header('Cache-Control: no-store');
+        header('Vary: Accept-Language');
         header('Access-Control-Allow-Origin: *');
         header('X-Fondouk-Cache: ' . $cacheState);
         header('X-Fondouk-RateLimit-Remaining: ' . $rl['remaining']);

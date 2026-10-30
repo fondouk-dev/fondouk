@@ -11,12 +11,16 @@ Vérifie, pour chaque boutique :
                promo publique, elle, s'applique).
 
 Prérequis : boutique seedée (docker/seed/seed.php) + module installé.
+Un produit du seed introuvable rend le contrôle correspondant NOT_TESTED (jamais PASS) :
+le harnais ne déclare réussi que ce qu'il a réellement vérifié.
 La validation des réponses contre les schémas publiés 2026-04-08 est couverte par
 capability-core (UcpCatalogMapperTest + tools/validate-ucp.php).
 """
 import json
 import sys
 import urllib.request
+
+from harness_common import print_flags
 
 TIMEOUT = 30
 
@@ -68,23 +72,23 @@ def run(base):
     # AGT-0030 (prix B2B -30%) et AGT-0029 (promo publique -15%) sont, eux, publics.
     b2b_priced = next((p for p in all_products if p["title"] == "Tarif B2B"), None)
     pub_promo = next((p for p in all_products if p["title"] == "Promo publique"), None)
-    if b2b_priced:
-        v = b2b_priced["variants"][0]
-        checks["b2b_price_NOT_applied_to_anonymous"] = "list_price" not in v
-    if pub_promo:
-        v = pub_promo["variants"][0]
-        checks["public_price_applied_to_anonymous"] = "list_price" in v and v["list_price"]["amount"] > v["price"]["amount"]
+    # Produit absent du seed -> None (NOT_TESTED), jamais un PASS implicite.
+    checks["b2b_price_NOT_applied_to_anonymous"] = (
+        "list_price" not in b2b_priced["variants"][0] if b2b_priced else None)
+    checks["public_price_applied_to_anonymous"] = (
+        "list_price" in pub_promo["variants"][0]
+        and pub_promo["variants"][0]["list_price"]["amount"] > pub_promo["variants"][0]["price"]["amount"]
+        if pub_promo else None)
 
-    ok = all(checks.values())
-    for k, val in checks.items():
-        print(f"  {'✅' if val else '❌'} {k}: {val}")
+    ok = all(v is True for v in checks.values())
+    print_flags(checks)
     print(f"  => {'PASS' if ok else 'FAIL'} ({len(all_products)} produits publics)")
-    return ok
+    return ok, checks
 
 
 def main(argv):
     bases = argv[1:] or ["http://localhost:8081", "http://localhost:8091"]
-    results = {b: run(b) for b in bases}
+    results = {b: run(b)[0] for b in bases}
     print("\n" + "=" * 40)
     allok = all(results.values())
     for b, ok in results.items():

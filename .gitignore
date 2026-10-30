@@ -35,3 +35,7 @@ Thumbs.db
 prestashop-module/config_*.xml
 
 build/public-export/
+
+# Caches Python des harnais (scripts/)
+__pycache__/
+*.pyc

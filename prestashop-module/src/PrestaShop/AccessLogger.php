@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace PrestaShop\Module\Fondouk\PrestaShop;
 
+use PrestaShop\Module\Fondouk\PrestaShop\Readiness\SelfCheckToken;
+
 if (!defined('_PS_VERSION_')) {
     exit;
 }
@@ -55,6 +57,14 @@ final class AccessLogger
             $headers = \Symfony\Component\HttpFoundation\Request::createFromGlobals()->headers;
             $ucpAgent = $headers->get('UCP-Agent');
             $userAgent = $headers->get('User-Agent');
+            if (self::isSelfCheck((string) $userAgent, (string) $headers->get(SelfCheckToken::HEADER, ''), $context)) {
+                return; // le diagnostic de la boutique n'est pas un visiteur
+            }
+            // F-01 : volume de lignes détaillées borné par boutique et par jour ; au-delà,
+            // l'événement est seulement compté (agrégat à écritures bornées).
+            if (!TelemetryBudget::admit((int) $context->shop->id, $endpoint === 'mcp' ? 'mcp' : 'ucp', $endpoint, $httpStatus)) {
+                return;
+            }
 
             \Db::getInstance()->insert('fondouk_access_log', [
                 'date_add' => date('Y-m-d H:i:s'),
@@ -134,6 +144,7 @@ final class AccessLogger
                         $moreRemains = true; // dernier lot encore plein -> il reste du travail
                     }
                 }
+                TelemetryBudget::purgeOlderThan($idShop, $days);
                 // On ne marque « fini pour aujourd'hui » que si le backlog est VIDÉ. Sinon on
                 // laisse le prochain accès poursuivre (budget borné à chaque fois).
                 if (!$moreRemains) {
@@ -145,5 +156,17 @@ final class AccessLogger
         } catch (\Throwable $e) {
             // Une purge ratée ne doit jamais casser une réponse ni bloquer la requête.
         }
+    }
+
+    /**
+     * Requête du Commerce Diagnostic de la boutique elle-même (StorefrontFetcher) : agent
+     * « FondoukReadiness/ » ET jeton valide de la passe en cours (SelfCheckToken). L'adresse IP
+     * n'est pas utilisée : derrière un proxy, X-Forwarded-For est imitable. Un robot extérieur
+     * qui usurperait l'agent, sans le jeton, reste enregistré.
+     */
+    public static function isSelfCheck(string $userAgent, string $token, \Context $context): bool
+    {
+        return str_starts_with($userAgent, 'FondoukReadiness/')
+            && SelfCheckToken::isValid((int) $context->shop->id, $token);
     }
 }

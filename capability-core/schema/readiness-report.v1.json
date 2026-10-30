@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://fondouk.dev/schema/readiness-report.v1.json",
+  "title": "Fondouk Commerce Diagnostic — rapport d'un passage",
+  "description": "Résultat d'un passage du diagnostic (Commerce Readiness). Chaque contrôle porte un statut PASS, WARN, FAIL ou NOT_TESTED ; NOT_TESTED exige une cause et n'est jamais compté comme PASS. Les preuves sont bornées (5 éléments, 4 Kio au total, contrôlé par le code) et ne contiennent aucune donnée client.",
+  "type": "object",
+  "required": ["report_version", "run", "context", "results"],
+  "additionalProperties": false,
+  "properties": {
+    "report_version": { "const": "1" },
+    "run": {
+      "type": "object",
+      "required": ["run_id", "started_at", "finished_at", "module", "prestashop_version", "protocols", "budget_s", "sample_size", "totals"],
+      "additionalProperties": false,
+      "properties": {
+        "run_id": { "type": "string", "minLength": 8 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "finished_at": { "type": "string", "format": "date-time" },
+        "module": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": { "name": { "type": "string" }, "version": { "type": "string" } }
+        },
+        "prestashop_version": { "type": "string" },
+        "protocols": {
+          "type": "object",
+          "required": ["ucp", "mcp"],
+          "additionalProperties": false,
+          "properties": { "ucp": { "type": "string" }, "mcp": { "type": "string" } }
+        },
+        "budget_s": { "type": "number", "exclusiveMinimum": 0 },
+        "sample_size": { "type": "integer", "minimum": 0 },
+        "totals": {
+          "type": "object",
+          "required": ["PASS", "WARN", "FAIL", "NOT_TESTED"],
+          "additionalProperties": false,
+          "properties": {
+            "PASS": { "type": "integer", "minimum": 0 },
+            "WARN": { "type": "integer", "minimum": 0 },
+            "FAIL": { "type": "integer", "minimum": 0 },
+            "NOT_TESTED": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["id_shop", "base_url", "language", "currency", "country", "visitor_group", "tax_display", "catalog_mode", "prices_visible", "theme", "storefront_path"],
+      "additionalProperties": false,
+      "properties": {
+        "id_shop": { "type": "integer", "minimum": 1 },
+        "base_url": { "type": "string" },
+        "language": { "type": "string" },
+        "currency": { "type": "string" },
+        "country": { "type": "string" },
+        "visitor_group": { "type": "integer" },
+        "tax_display": { "type": "string", "enum": ["tax_incl", "tax_excl"] },
+        "catalog_mode": { "type": "boolean" },
+        "prices_visible": { "type": "boolean" },
+        "theme": { "type": "string" },
+        "storefront_path": { "type": "string", "enum": ["public", "loopback", "unreachable", "not_used"] }
+      }
+    },
+    "results": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/result" }
+    }
+  },
+  "$defs": {
+    "result": {
+      "type": "object",
+      "required": ["check_id", "check_version", "category", "tier", "status", "severity", "evidence", "cause", "action", "duration_ms"],
+      "additionalProperties": false,
+      "properties": {
+        "check_id": { "type": "string", "pattern": "^[A-E][0-9]+(-[FP])?$" },
+        "check_version": { "type": "string" },
+        "category": { "type": "string", "enum": ["environment", "protocol", "security", "fidelity", "data_quality"] },
+        "tier": { "type": "string", "enum": ["free", "pro"] },
+        "status": { "type": "string", "enum": ["PASS", "WARN", "FAIL", "NOT_TESTED"] },
+        "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+        "evidence": { "type": "array", "maxItems": 5, "items": { "type": "object" } },
+        "cause": { "type": "string" },
+        "action": { "type": "string" },
+        "not_tested_reason": {
+          "type": "string",
+          "enum": ["network", "timeout", "http_auth", "maintenance", "rate_limited", "budget", "unsupported_theme", "no_data", "context"]
+        },
+        "duration_ms": { "type": "integer", "minimum": 0 }
+      },
+      "if": { "properties": { "status": { "const": "NOT_TESTED" } } },
+      "then": { "required": ["not_tested_reason"] }
+    }
+  }
+}

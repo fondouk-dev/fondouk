@@ -8,7 +8,13 @@
  * @license   https://opensource.org/licenses/MIT MIT License
  */
 
+use PrestaShop\Module\Fondouk\PrestaShop\Readiness\FreeChecks;
+use PrestaShop\Module\Fondouk\PrestaShop\Readiness\Messages;
+use PrestaShop\Module\Fondouk\PrestaShop\Readiness\ReadinessRunner;
+use PrestaShop\Module\Fondouk\PrestaShop\Readiness\RunContext;
 use PrestaShop\Module\Fondouk\PrestaShop\ResponseCache;
+use PrestaShop\Module\Fondouk\PrestaShop\TelemetryBudget;
+use PrestaShop\Module\Fondouk\PrestaShop\TrustedProxies;
 
 if (!defined('_PS_VERSION_')) {
     exit;
@@ -25,7 +31,7 @@ class Fondouk extends Module
     {
         $this->name = 'fondouk';
         $this->tab = 'front_office_features';
-        $this->version = '1.3.2';
+        $this->version = '2.0.0';
         $this->author = 'Synapsea';
         $this->need_instance = 0;
         $this->ps_versions_compliancy = ['min' => '8.0.0', 'max' => '9.99.99'];
@@ -66,17 +72,49 @@ class Fondouk extends Module
             && Configuration::deleteByName('FONDOUK_IP_SALT')
             && Configuration::deleteByName('FONDOUK_CATALOG_VERSION')
             && Configuration::deleteByName('FONDOUK_LAST_PURGE')
+            && Configuration::deleteByName('FONDOUK_READINESS_LOCK')
+            && Configuration::deleteByName('FONDOUK_READINESS_SELFCHECK')
+            && Configuration::deleteByName('FONDOUK_TRUSTED_PROXIES')
+            && Configuration::deleteByName('FONDOUK_PROXY_HINT_AT')
+            && Configuration::deleteByName('FONDOUK_PROXY_HINT_FROM')
             && parent::uninstall();
     }
 
     /** Hooks dont le déclenchement invalide le cache catalogue (spec §4.4). */
-    private const CACHE_INVALIDATION_HOOKS = [
+    public const CACHE_INVALIDATION_HOOKS = [
         'actionProductSave',
         'actionProductDelete',
         'actionUpdateQuantity',
         'actionObjectSpecificPriceAddAfter',
         'actionObjectSpecificPriceUpdateAfter',
         'actionObjectSpecificPriceDeleteAfter',
+        // R3-09 : visibilité (catégories et leurs groupes), réductions de groupe, taxes, devises,
+        // règles de prix catalogue et déclinaisons changent aussi ce que voient les agents.
+        'actionObjectCategoryAddAfter',
+        'actionObjectCategoryUpdateAfter',
+        'actionObjectCategoryDeleteAfter',
+        'actionObjectGroupAddAfter',
+        'actionObjectGroupUpdateAfter',
+        'actionObjectGroupDeleteAfter',
+        'actionObjectGroupReductionAddAfter',
+        'actionObjectGroupReductionUpdateAfter',
+        'actionObjectGroupReductionDeleteAfter',
+        'actionObjectTaxAddAfter',
+        'actionObjectTaxUpdateAfter',
+        'actionObjectTaxDeleteAfter',
+        'actionObjectTaxRuleAddAfter',
+        'actionObjectTaxRuleUpdateAfter',
+        'actionObjectTaxRuleDeleteAfter',
+        'actionObjectTaxRulesGroupAddAfter',
+        'actionObjectTaxRulesGroupUpdateAfter',
+        'actionObjectTaxRulesGroupDeleteAfter',
+        'actionObjectCurrencyUpdateAfter',
+        'actionObjectSpecificPriceRuleAddAfter',
+        'actionObjectSpecificPriceRuleUpdateAfter',
+        'actionObjectSpecificPriceRuleDeleteAfter',
+        'actionObjectCombinationAddAfter',
+        'actionObjectCombinationUpdateAfter',
+        'actionObjectCombinationDeleteAfter',
     ];
 
     public function hookActionProductSave(): void
@@ -105,6 +143,131 @@ class Fondouk extends Module
     }
 
     public function hookActionObjectSpecificPriceDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCategoryAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCategoryUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCategoryDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupReductionAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupReductionUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectGroupReductionDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRuleAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRuleUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRuleDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRulesGroupAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRulesGroupUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectTaxRulesGroupDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCurrencyUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectSpecificPriceRuleAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectSpecificPriceRuleUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectSpecificPriceRuleDeleteAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCombinationAddAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCombinationUpdateAfter(): void
+    {
+        ResponseCache::bump();
+    }
+
+    public function hookActionObjectCombinationDeleteAfter(): void
     {
         ResponseCache::bump();
     }
@@ -139,13 +302,17 @@ class Fondouk extends Module
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8mb4;';
 
         return (bool) Db::getInstance()->execute($sql)
-            && (bool) Db::getInstance()->execute($rateLimit);
+            && (bool) Db::getInstance()->execute($rateLimit)
+            && (bool) Db::getInstance()->execute(TelemetryBudget::createTableSql());
     }
 
     protected function uninstallDb(): bool
     {
         return (bool) Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fondouk_access_log`;')
-            && (bool) Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fondouk_rate_limit`;');
+            && (bool) Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . 'fondouk_rate_limit`;')
+            // Table d'agrégats partagée avec le Pro (qui y garde ses totaux) : laissée au Pro.
+            && (Module::isInstalled('fondoukpro')
+                || (bool) Db::getInstance()->execute('DROP TABLE IF EXISTS `' . _DB_PREFIX_ . TelemetryBudget::TABLE . '`;'));
     }
 
     /** Sel secret pour le hachage d'IP de la télémétrie (jamais d'IP en clair — §8bis). */
@@ -239,8 +406,17 @@ class Fondouk extends Module
     {
         $base = rtrim($this->context->shop->getBaseURL(true, true), '/');
         $wellKnownDir = rtrim(_PS_ROOT_DIR_, '/') . '/.well-known';
+        $proActive = Module::isInstalled(self::PRO_MODULE) && Module::isEnabled(self::PRO_MODULE);
+        [$report, $readinessError] = $proActive ? [null, ''] : $this->runReadinessIfRequested();
+        [$proxiesStatus, $proxiesRejected] = $proActive ? ['', []] : $this->saveTrustedProxiesIfRequested();
+        $proxyHint = TrustedProxies::hint();
 
         $this->context->smarty->assign([
+            'fondouk_readiness_rows' => $report !== null ? $this->readinessRows($report) : [],
+            'fondouk_readiness_report' => $report,
+            'fondouk_readiness_error' => $readinessError,
+            'fondouk_readiness_token' => Tools::getAdminTokenLite('AdminModules'),
+            'fondouk_readiness_action' => $this->context->link->getAdminLink('AdminModules', true, [], ['configure' => $this->name]),
             'fondouk_https' => parse_url($base, PHP_URL_SCHEME) === 'https',
             'fondouk_rewriting' => (bool) Configuration::get('PS_REWRITING_SETTINGS'),
             'fondouk_conflict' => is_dir($wellKnownDir) || file_exists($wellKnownDir . '/ucp'),
@@ -250,9 +426,96 @@ class Fondouk extends Module
             'fondouk_search_url' => $base . '/fondouk/ucp/catalog/search',
             'fondouk_mcp_url' => $base . '/fondouk/ucp/mcp',
             // Standby: when Fondouk Pro is active, this module defers the whole agent surface.
-            'fondouk_pro_active' => Module::isInstalled(self::PRO_MODULE) && Module::isEnabled(self::PRO_MODULE),
+            'fondouk_pro_active' => $proActive,
+            'fondouk_proxies' => implode("\n", TrustedProxies::list()),
+            'fondouk_proxies_status' => $proxiesStatus,
+            'fondouk_proxies_rejected' => implode(', ', $proxiesRejected),
+            'fondouk_proxy_hint' => $proxyHint !== null ? $proxyHint['from'] : '',
         ]);
 
         return $this->context->smarty->fetch($this->local_path . 'views/templates/admin/diagnostic.tpl');
+    }
+
+    /**
+     * Proxys de confiance (facultatif) : enregistrés UNIQUEMENT par un employé autorisé (droit
+     * « configurer », jeton anti-CSRF) ; toute entrée invalide refuse l'enregistrement entier.
+     *
+     * @return array{0:string,1:array<int,string>} [statut ('', 'saved', 'invalid', 'forbidden', 'token'), entrées refusées]
+     */
+    private function saveTrustedProxiesIfRequested(): array
+    {
+        if (!Tools::isSubmit('fondouk_save_proxies')) {
+            return ['', []];
+        }
+        if (!$this->getPermission('configure')) {
+            return ['forbidden', []];
+        }
+        if ((string) Tools::getValue('fondouk_token') !== Tools::getAdminTokenLite('AdminModules')) {
+            return ['token', []];
+        }
+        [$valid, $invalid] = TrustedProxies::parse((string) Tools::getValue('fondouk_trusted_proxies', ''));
+        if ($invalid !== []) {
+            return ['invalid', $invalid];
+        }
+
+        return [TrustedProxies::save($valid) ? 'saved' : 'invalid', []];
+    }
+
+    /**
+     * Commerce Diagnostic essentiel : lancé UNIQUEMENT à la demande d'un employé autorisé
+     * (jeton anti-CSRF, droit « configurer »), une passe à la fois par boutique, jamais en
+     * contexte « toutes les boutiques ». Lecture seule ; aucun stockage du rapport.
+     *
+     * @return array{0:?array,1:string} [rapport | null, code d'erreur ('' si aucune)]
+     */
+    private function runReadinessIfRequested(): array
+    {
+        if (!Tools::isSubmit('fondouk_run_readiness')) {
+            return [null, ''];
+        }
+        if (!$this->getPermission('configure')) {
+            return [null, 'forbidden'];
+        }
+        if ((string) Tools::getValue('fondouk_token') !== Tools::getAdminTokenLite('AdminModules')) {
+            return [null, 'token'];
+        }
+        $ctx = RunContext::fromPrestaShop($this->context, $this, FreeChecks::BUDGET_S);
+        if ($ctx === null) {
+            return [null, 'context'];
+        }
+        $idShop = (int) $this->context->shop->id;
+        if (!ReadinessRunner::acquireLock($idShop)) {
+            return [null, 'running'];
+        }
+        try {
+            return [(new ReadinessRunner(FreeChecks::all()))->run($ctx, FreeChecks::BUDGET_S, 0, _PS_VERSION_), ''];
+        } finally {
+            ReadinessRunner::releaseLock($idShop);
+        }
+    }
+
+    /**
+     * Lignes d'affichage du rapport (textes déjà traduits, échappés par le gabarit).
+     *
+     * @param array<string,mixed> $report
+     *
+     * @return array<int,array<string,string>>
+     */
+    private function readinessRows(array $report): array
+    {
+        $messages = new Messages($this);
+        $rows = [];
+        foreach ($report['results'] as $r) {
+            $rows[] = [
+                'id' => (string) $r['check_id'],
+                'title' => $messages->get('title_' . $r['check_id']),
+                'status' => (string) $r['status'],
+                'cause' => (string) $r['cause'],
+                'action' => (string) $r['action'],
+                'evidence' => $r['evidence'] !== [] ? (string) json_encode($r['evidence'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) : '',
+            ];
+        }
+
+        return $rows;
     }
 }

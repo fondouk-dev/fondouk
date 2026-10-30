@@ -18,6 +18,7 @@ require_once _PS_MODULE_DIR_ . 'fondouk/vendor/autoload.php';
 
 use Fondouk\CapabilityCore\Adapter\Ucp\UcpManifestBuilder;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopShopProfileSource;
+use PrestaShop\Module\Fondouk\PrestaShop\RequestGuard;
 
 class FondoukLlmsModuleFrontController extends ModuleFrontController
 {
@@ -34,6 +35,7 @@ class FondoukLlmsModuleFrontController extends ModuleFrontController
 
     public function initContent()
     {
+        RequestGuard::closeIfStandby($this->module);
         $shop = (new PrestaShopShopProfileSource($this->context))->shop();
         $base = $shop->baseUrl;
         $name = $shop->name ?: $this->module->l('Store');

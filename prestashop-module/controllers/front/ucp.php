@@ -20,6 +20,7 @@ require_once _PS_MODULE_DIR_ . 'fondouk/vendor/autoload.php';
 use Fondouk\CapabilityCore\Adapter\Ucp\UcpManifestBuilder;
 use PrestaShop\Module\Fondouk\PrestaShop\AccessLogger;
 use PrestaShop\Module\Fondouk\PrestaShop\PrestaShopShopProfileSource;
+use PrestaShop\Module\Fondouk\PrestaShop\RequestGuard;
 use Symfony\Component\HttpFoundation\Request;
 
 class FondoukUcpModuleFrontController extends ModuleFrontController
@@ -39,6 +40,7 @@ class FondoukUcpModuleFrontController extends ModuleFrontController
 
     public function initContent()
     {
+        RequestGuard::closeIfStandby($this->module);
         $start = microtime(true);
         $profile = new PrestaShopShopProfileSource($this->context);
         $base = rtrim($this->context->shop->getBaseURL(true, true), '/');
@@ -75,11 +77,14 @@ class FondoukUcpModuleFrontController extends ModuleFrontController
      */
     private function annotateGetConvenience(string $json, string $base): string
     {
-        $data = json_decode($json, true);
-        if (!is_array($data)) {
+        // Décodage en OBJETS (et non en tableaux associatifs) : un registre vide du manifeste
+        // (`payment_handlers: {}`) doit rester un objet JSON. Décodé en tableau, il était
+        // réémis en `[]` et le manifeste échouait au schéma UCP (corrigé en 2.0.0).
+        $data = json_decode($json);
+        if (!$data instanceof stdClass) {
             return $json;
         }
-        $data['x-fondouk'] = [
+        $data->{'x-fondouk'} = [
             'get_convenience' => [
                 'note' => 'Non-normative convenience. Canonical UCP catalog transport is POST (per spec); these GET forms return the same schema-conformant payloads for GET-oriented agents.',
                 'search' => $base . '/fondouk/ucp/catalog/search?q={text}&limit={n}',
